@@ -1,0 +1,140 @@
+openapi: 3.0.1
+info:
+  title: DIVERA 24/7 RESTful Webservice
+  description: "Die API von DIVERA 24/7 bietet zahlreiche Möglichkeiten, um eigene Dienste anzubinden und Aktionen auszulösen. Für Testzwecke empfehlen wir Ihnen, eine separate Einheit anzulegen. Testeinheiten von zahlenden Kunden werden auf Nachfrage kostenfrei hochgestuft.
+    \n\nBeachten Sie als Nutzer der kostenlosen Version: Innerhalb von fünf Minuten kann nur eine Alarmierung ausgelöst werden.
+    Gespeichert wird nur das Einsatz-Stichwort.
+    Sie können die ALARM-Version mit unbegrenzter Schnittstelle unverbindlich 30 Tage lang testen.
+    Den Test beantragen Sie nach dem Login im Browser unter Verwaltung > Konto > Kontakt- und Vertragsdaten."
+  version: 4.1.0
+servers:
+  - url: https://app.divera247.com
+tags:
+  - name: CRUD
+    description: Die wichtigsten Methoden zum Erstellen, Bearbeiten und Löschen von Anhängen
+paths:
+  /api/v2/attachments:
+    get:
+      tags:
+        - CRUD
+      summary: Meta-Daten aller Anhänge
+      responses:
+        200:
+          description: Der Download der Datei erfolgt unter /api/v2/file/open/{id}
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: TRUE
+                  data:
+                    type: object
+                    properties:
+                      items:
+                        type: object
+                        description: Liste der Anhängenach ID
+                        additionalProperties:
+                          $ref: '#/components/schemas/attachment-result'
+                      sorting:
+                        type: array
+                        items:
+                          type: integer
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+      security:
+        - Personal-API-Accesskey: []
+  /api/v2/attachments/{id}:
+    get:
+      tags:
+        - CRUD
+      summary: Meta-Daten eines einzelnen Anhangs abfragen
+      parameters:
+        - name: id
+          in: path
+          description: ID des Anhangs
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Rückgabewert bei erfolgreicher Anmeldung wie auch bei Fehlern (errors beachten)
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: TRUE
+                  data:
+                    $ref: '#/components/schemas/attachment-result'
+    delete:
+      tags:
+        - CRUD
+      summary: Anhang inklusive Datei löschen
+      parameters:
+        - name: id
+          in: path
+          description: ID des Anhangs
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Rückgabewert bei erfolgreicher Anmeldung wie auch bei Fehlern (errors beachten)
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: TRUE
+components:
+  schemas:
+    attachment-result:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 123
+          description: ID/Primärschlüssel
+        file_reference_id:
+          type: integer
+          example: 765462
+          description: ID der Referenz (enthält Meta-Daten)
+        foreign_type:
+          type: string
+          example: alarm
+          description: Typ der Verknüpfung
+        foreign_id:
+          type: number
+          example: 12345
+          description: Primärschlüssel des verknüpften Datensatzes
+        type:
+          type: integer
+          description: interner Typ
+        title:
+          type: string
+          example: Einsatzbericht.xlsx
+          description: Titel des Anhangs
+        description:
+          type: string
+          example: Einsatzbericht zur Alarmierung am 01.01.2020 00:03
+          description: Beschreibung des Anhangs
+        encrypted:
+          type: boolean
+          example: true
+          description: Verschlüsselt
+        encryption_iv:
+          type: string
+          description: Initialisierungsvektor
+
+  securitySchemes:
+    Personal-API-Accesskey:
+      type: apiKey
+      name: accesskey
+      in: query
