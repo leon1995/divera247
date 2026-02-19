@@ -1,0 +1,826 @@
+openapi: 3.0.1
+info:
+  title: DIVERA 24/7 RESTful Webservice für Messenger-Kanäle
+  description: "Die API von DIVERA 24/7 bietet zahlreiche Möglichkeiten, um eigene Dienste anzubinden und Aktionen auszulösen. Für Testzwecke empfehlen wir Ihnen, eine separate Einheit anzulegen. Testeinheiten von zahlenden Kunden werden auf Nachfrage kostenfrei hochgestuft."
+  version: 4.1.0
+servers:
+  - url: https://app.divera247.com
+tags:
+  - name: CRUD
+    description: Die wichtigsten Methoden zum Erstellen, Bearbeiten, Archivieren und Löschen von Messenger-Kanälen
+paths:
+  /api/v2/message-channels:
+    get:
+      tags:
+        - CRUD
+      summary: Methode zum Abrufen aller nicht archivierten Kanäle
+      responses:
+        200:
+          description: successful
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      items:
+                        type: object
+                        description: Liste der einzelnen Kanäle nach ID
+                        additionalProperties:
+                          $ref: '#/components/schemas/message-channel-result'
+                      sorting:
+                        type: array
+                        description: Reihenfolge der Kanäle, absteigend
+                        items:
+                          type: integer
+                  ucr:
+                    type: integer
+                    description: ID der UserClusterRelation im aktuellen Request
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+        404:
+          description: Objekt nicht gefunden oder Zugriff nicht gestattet
+          content: {}
+      security:
+        - Personal-API-Accesskey: []
+    post:
+      tags:
+        - CRUD
+      summary: Methode zum Erstellen eines neuen Kanals
+      requestBody:
+        description: Parameter im JSON-Format
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/message-channel-input'
+      responses:
+        200:
+          description: successful
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/message-channel-result'
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+        404:
+          description: Objekt nicht gefunden oder Zugriff nicht gestattet
+          content: {}
+      security:
+        - Personal-API-Accesskey: []
+  /api/v2/message-channels/{id}:
+    get:
+      tags:
+        - CRUD
+      summary: Methode zum Anzeigen des Kanals
+      parameters:
+        - name: id
+          in: path
+          description: ID des Kanals
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: successful
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/message-channel-result'
+                  ucr:
+                    type: integer
+                    description: ID der UserClusterRelation im aktuellen Request
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+        404:
+          description: Objekt nicht gefunden oder Zugriff nicht gestattet
+          content: {}
+      security:
+        - Personal-API-Accesskey: []
+    put:
+      tags:
+        - CRUD
+      summary: Methode zum Bearbeiten des Kanals
+      parameters:
+        - name: id
+          in: path
+          description: ID des Kanals
+          required: true
+          schema: {}
+      requestBody:
+        description: Parameter im JSON-Format
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/message-channel-input'
+        required: true
+      responses:
+        200:
+          description: successful
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/message-channel-result'
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+        404:
+          description: Objekt nicht gefunden oder Zugriff nicht gestattet
+          content: {}
+      security:
+        - Personal-API-Accesskey: []
+    delete:
+      tags:
+        - CRUD
+      summary: Methode zum Löschen des Kanals
+      parameters:
+        - name: id
+          in: path
+          description: ID des Kanals
+          required: true
+          schema: {}
+      responses:
+        200:
+          description: successful
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/success'
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+        404:
+          description: Objekt nicht gefunden oder Zugriff nicht gestattet
+          content: {}
+      security:
+        - Personal-API-Accesskey: []
+#  /api/v2/message-channels/archive/{id}:
+#    post:
+#      tags:
+#        - CRUD
+#      summary: Methode zum Archivieren bzw. Verbergen des Kanals
+#      parameters:
+#        - name: id
+#          in: path
+#          description: ID des Kanals
+#          required: true
+#          schema: {}
+#      responses:
+#        200:
+#          description: successful
+#          content:
+#            'application/json':
+#              schema:
+#                $ref: '#/components/schemas/success'
+#        403:
+#          description: Accesskey fehlt oder ungültig
+#          content: {}
+#        404:
+#          description: Objekt nicht gefunden oder Zugriff nicht gestattet
+#          content: {}
+#      security:
+#        - Personal-API-Accesskey: []
+#  /api/v2/message-channels/join/{id}:
+#    post:
+#      tags:
+#        - CRUD
+#      summary: Methode um dem Kanal beizutreten (vorher keine Benachrichtigung)
+#      parameters:
+#        - name: id
+#          in: path
+#          description: ID des Kanals
+#          required: true
+#          schema: {}
+#      responses:
+#        200:
+#          description: successful
+#          content:
+#            'application/json':
+#              schema:
+#                $ref: '#/components/schemas/success'
+#        403:
+#          description: Accesskey fehlt oder ungültig
+#          content: {}
+#        404:
+#          description: Objekt nicht gefunden oder Zugriff nicht gestattet
+#          content: {}
+#      security:
+#        - Personal-API-Accesskey: []
+#  /api/v2/message-channels/leave/{id}:
+#    post:
+#      tags:
+#        - CRUD
+#      summary: Methode um den Kanal zu verlassen (es erfolgt keine Benachrichtigung mehr)
+#      parameters:
+#        - name: id
+#          in: path
+#          description: ID des Kanals
+#          required: true
+#          schema: {}
+#      responses:
+#        200:
+#          description: successful
+#          content:
+#            'application/json':
+#              schema:
+#                $ref: '#/components/schemas/success'
+#        403:
+#          description: Accesskey fehlt oder ungültig
+#          content: {}
+#        404:
+#          description: Objekt nicht gefunden oder Zugriff nicht gestattet
+#          content: {}
+#      security:
+#        - Personal-API-Accesskey: []
+  /api/v2/message-channels/messages/{id}:
+    get:
+      tags:
+        - CRUD
+      summary: Methode zum gezielten Nachladen von Nachrichten des ausgewählten Kanals
+      parameters:
+        - name: id
+          in: path
+          description: ID des Kanals
+          required: true
+          schema:
+            type: integer
+        - name: first_message_id
+          in: query
+          description: ID der ersten Nachricht (von dieser ID ausgehend wird standardmäßig absteigend gesucht)
+          required: true
+          schema:
+            type: integer
+        #        - name: last_message_id
+        #          in: path
+        #          description: ID der letzten/aktuellsten Nachricht (von dieser ID ausgehend wird standardmäßig aufsteigend gesucht, optional)
+        #          required: false
+        #          schema:
+        #            type: integer
+        - name: parent_message_id
+          in: query
+          description: Zur Abfrage eines Threads die ID der abzweigenden Nachricht senden (optional)
+          required: false
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          description: Maximale Nachrichten-Anzahl (optional, default 10 Stück, max 999 Stück)
+          required: false
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          description: Anzahl der Nachrichten, die ausgelassen werden (optional)
+          required: false
+          schema:
+            type: integer
+      #        - name: search_type
+      #          in: path
+      #          description: desc = absteigend (Standard), asc (aufsteigend), range (Nachrichten zwischen first_message_id und last_message_id)
+      #          required: false
+      #          schema:
+      #            type: string
+      #            example: desc
+      responses:
+        200:
+          description: successful
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    description: Index entspricht ID, Wert der vollständigen Nachricht, Sortierung absteigend
+                example: '{"success":true,"data":{"items":{"1":{"id":1,"message_channel_id":1,"author_id":123,"parent_id":0,"attachment_count":0,"attachments":[],"text":"Erste Antwort im DIVERA 24/7 Messenger.","ts_create":1579430753,"ts_update":1579430787,"messages":[],"thread":false,"hidden":false,"deleted":false,"deleted_by_user_cluster_relation_id":0}},"message_count":1,"first_message_id":1,"last_message_id":1,"ts_last_message":1579430787},"ucr":123}'
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+        404:
+          description: Objekt nicht gefunden oder Zugriff nicht gestattet
+          content: {}
+      security:
+        - Personal-API-Accesskey: []
+  /api/v2/message-channels/message-sorting/{id}:
+    get:
+      tags:
+        - CRUD
+      summary: Methode zum Holen der Nachrichten-IDs im Kanal
+      parameters:
+        - name: id
+          in: path
+          description: ID des Kanals
+          required: true
+          schema:
+            type: integer
+        - name: parent_message_id
+          in: query
+          description: Zur Abfrage eines Threads die ID der abzweigenden Nachricht senden (optional)
+          required: false
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          description: Maximale Nachrichten-Anzahl (optional, default 10 Stück, max 999 Stück)
+          required: false
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          description: Anzahl der Nachrichten, die ausgelassen werden (optional)
+          required: false
+          schema:
+            type: integer
+      responses:
+        200:
+          description: successful
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    description: Index entspricht ID, Wert dem UNIX-Timestamp (letzte Änderung oder Erstelldatum), Sortierung absteigend
+                example:
+                  success: true,
+                  data:
+                    ucr: 5
+                    sorting:
+                      '1': 1574090955
+                      '2': 1573975763
+                      '3': 1573979267
+                      '4': 1573979272
+                      '5': 1573979428
+                      '6': 1573979451
+                      '7': 1573979460
+                      '8': 1573979537
+                      '9': 1573979619
+                      '10': 1573979786
+                    message_count: 10
+                    first_message_id: 1
+                    last_message_id: 10
+                    ts_last_message: 1573979786
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+        404:
+          description: Objekt nicht gefunden oder Zugriff nicht gestattet
+          content: {}
+      security:
+        - Personal-API-Accesskey: []
+  /api/v2/message-channels/activity/{id}:
+    post:
+      tags:
+        - CRUD
+      summary: Methode um die letzte Aktivität innerhalb eines Kanals zu speichern
+      parameters:
+        - name: id
+          in: path
+          description: ID des Kanals
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        description: Parameter
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                MessageChannel:
+                  type: object
+                  properties:
+                    last_message_id:
+                      type: integer
+                      example: 42
+                      description: ID der zuletzt gelesenen Nachricht
+      responses:
+        200:
+          description: successful
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/success'
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+        404:
+          description: Objekt nicht gefunden oder Zugriff nicht gestattet
+          content: {}
+      security:
+        - Personal-API-Accesskey: []
+  /api/v2/message-channels/notification-settings/{id}:
+    post:
+      tags:
+        - CRUD
+      summary: Methode um die persönlichen Benachrichtigungseinstellungen zu ändern (sofort stumm, stumm ab, stumm bis)
+      parameters:
+        - name: id
+          in: path
+          description: ID des Kanals
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        description: Parameter
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                MessageChannel:
+                  type: object
+                  properties:
+                    self_access:
+                      type: object
+                      properties:
+                        silent:
+                          type: boolean
+                          description: Stumm schalten ab sofort
+                        ts_silent_expire:
+                          type: integer
+                          description: Stumm ab als Timestamp
+                        ts_silent_start:
+                          type: integer
+                          description: Stumm bis als Timestamp
+      responses:
+        200:
+          description: successful
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/success'
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+        404:
+          description: Objekt nicht gefunden oder Zugriff nicht gestattet
+          content: {}
+      security:
+        - Personal-API-Accesskey: []
+
+components:
+  schemas:
+    success:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: TRUE
+        data:
+          type: object
+        ucr:
+          type: integer
+          description: ID der UserClusterRelation im aktuellen Request
+
+    message-channel-input:
+      type: object
+      properties:
+        MessageChannel:
+          type: object
+          properties:
+            title:
+              type: string
+              example: Technik-Team
+              description: Titel
+            description:
+              type: string
+              example: Absprachen zu Gebäude, Fuhrpark und Gerätschaften
+              description: Beschreibung
+            access_all:
+              type: boolean
+              description: Für alle Mitglieder der Einheit zugänglich
+              example: true
+            entities:
+              type: object
+              description: Sofern nicht automatisch alle Nutzer hinzugefügt werden sollen (access_all), werden hier die IDs der Nutzer, Gruppen und/oder Standorte übergeben, welche nach dem Speichern teilnehmen dürfen
+              properties:
+                cluster:
+                  type: array
+                  description: IDs der Standorte
+                  items:
+                    type: integer
+                group:
+                  type: array
+                  description: IDs der Gruppen
+                  items:
+                    type: integer
+                user_cluster_relation:
+                  type: array
+                  description: IDs der Benutzer
+                  items:
+                    type: integer
+            config:
+              $ref: '#/components/schemas/config'
+            ucr_access:
+              type: object
+              description: Optionale Vorgabe der Berechtigungen der einzelnen Teilnehmer, alle nicht aufgeführten Nutzer erhalten die Standard-Berechtigungen gemäß den Vorgaben der Einheit
+              example:
+                '1':
+                  access: 1
+                  access_earlier_messages: 0
+                  attachable: true
+                  confirmed: 0
+                  editable: false
+                  notification: true
+                  silent: false
+                  ts_access_expire: 0
+                  ts_access_start: 0
+                  user_cluster_relation_id: 1
+                  writable: true
+                  ts_create: 123456789
+              additionalProperties:
+                $ref: '#/components/schemas/ucr-access'
+            private_mode:
+              type: boolean
+              description: Sichtbarkeit privat
+            ts_publish:
+              type: integer
+              description: UNIX-Timestamp für eine zeitgesteuerte Veröffentlichung
+            ts_archive:
+              type: integer
+              description: UNIX-Timestamp für eine zeitgesteuerte Archivierung
+            ts_delete:
+              type: integer
+              description: UNIX-Timestamp für eine zeitgesteuertes Löschen
+
+    message-channel-result:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 123
+          description: ID des Kanals
+        foreign_type:
+          type: string
+          example: alarm|news|event
+          description: Sofern der Kanal zu einer Meldung gehört, wird hier der Typ ausgedrückt
+        foreign_id:
+          type: string
+          example: 2019-1023
+          description: ID der Meldung, zu dem der Kanal gehört
+        cluster_id:
+          type: integer
+          example: 123456789
+          description: ID der Einheit (Cluster)
+        author_id:
+          type: integer
+          example: 123456789
+          description: ID des Nutzers (UserClusterRelation)
+        first_message_id:
+          type: integer
+          description: ID der ersten Nachricht
+        last_message_id:
+          type: integer
+          description: ID der letzten Nachricht
+        title:
+          type: string
+          example: Technik-Team
+          description: Titel
+        description:
+          type: string
+          example: Absprachen zu Gebäude, Fuhrpark und Gerätschaften
+          description: Beschreibung
+        access_all:
+          type: boolean
+          description: Für alle Mitglieder der Einheit zugänglich
+          example: true
+        entities:
+          type: object
+          description: Gespeicherte Relationen für den Zugriff auf den Kanal
+          properties:
+            cluster:
+              type: array
+              description: IDs der Standorte
+              items:
+                type: integer
+            group:
+              type: array
+              description: IDs der Gruppen
+              items:
+                type: integer
+            user_cluster_relation:
+              type: array
+              description: IDs der Benutzer
+              items:
+                type: integer
+        config:
+          $ref: '#/components/schemas/config'
+        ucr_access:
+          type: object
+          description: Berechtigungen aller Teilnehmer, Datentyp von ucr_access ist ein Objekt, Index gemäß IDs der Benutzer/UCR
+          example:
+            '1':
+              user_cluster_relation_id: 1
+              access: 1
+              access_earlier_messages: 0
+              attachable: true
+              confirmed: 0
+              editable: false
+              notification: true
+              silent: false
+              ts_access_expire: 0
+              ts_access_start: 0
+              writable: true
+              ts_create: 123456789
+          additionalProperties:
+            $ref: '#/components/schemas/ucr-access'
+        self_access:
+          type: object
+          properties:
+            editable:
+              type: boolean
+              description: Moderieren
+            writable:
+              type: boolean
+              description: Schreiben
+            attachable:
+              type: boolean
+              description: Dateien anhängen
+            notification:
+              type: boolean
+              description: Benachrichtigen
+            access:
+              type: boolean
+              description: Teilnahme gestattet
+            access_start:
+              type: boolean
+              description: Teilnahme ab
+            access_expire:
+              type: boolean
+              description: Teilnahme bis
+            access_earlier_messages:
+              type: boolean
+              description: Auf Vorherige zugreifen
+            ts_access_start:
+              type: integer
+              description: Teilnahme ab, als UNIX-Timestamp
+            ts_access_expire:
+              type: integer
+              description: Teilnahme bis, UNIX-Timestamp
+            ts_create:
+              type: integer
+              description: Hinzugefügt am, als UNIX-Timestamp
+          description: Eigene Berechtigungen
+        private_mode:
+          type: boolean
+          description: Sichtbarkeit privat
+        editable:
+          type: boolean
+          description: Bearbeitbar
+        ts_publish:
+          type: integer
+          description: UNIX-Timestamp für eine zeitgesteuerte Veröffentlichung
+        archive:
+          type: boolean
+          description: Zeitgesteuert archivieren
+        ts_archive:
+          type: integer
+          description: UNIX-Timestamp für eine zeitgesteuerte Archivierung
+        delete:
+          type: boolean
+          description: Zeitgesteuert löschen
+        ts_delete:
+          type: integer
+          description: UNIX-Timestamp für eine zeitgesteuertes Löschen
+        ts_create:
+          type: integer
+          description: UNIX-Timestamp des Erstelldatums
+        ts_update:
+          type: integer
+          description: UNIX-Timestamp zuletzt bearbeitet
+        ts_last_message:
+          type: integer
+          description: UNIX-Timestamp der letzten neuen Nachricht
+
+    ucr-access:
+      type: object
+      description: Die Berechtigungen der einzelnen Teilnehmer
+      example:
+        access: 1
+        access_earlier_messages: 0
+        attachable: true
+        confirmed: 0
+        editable: false
+        notification: true
+        silent: false
+        ts_access_expire: 0
+        ts_access_start: 0
+        user_cluster_relation_id: 1
+        writable: true
+        ts_create: 123456789
+      properties:
+        user_cluster_relation_id:
+          type: integer
+          description: ID der UserClusterRelation
+        editable:
+          type: boolean
+          description: Moderieren
+        writable:
+          type: boolean
+          description: Schreiben
+        attachable:
+          type: boolean
+          description: Dateien anhängen
+        notification:
+          type: boolean
+          description: Benachrichtigen
+        access:
+          type: boolean
+          description: Teilnahme gestattet
+        access_start:
+          type: boolean
+          description: Teilnahme ab
+        access_expire:
+          type: boolean
+          description: Teilnahme bis
+        access_earlier_messages:
+          type: boolean
+          description: Auf Vorherige zugreifen
+        ts_access_start:
+          type: integer
+          description: Teilnahme ab, als UNIX-Timestamp
+        ts_access_expire:
+          type: integer
+          description: Teilnahme bis, UNIX-Timestamp
+        ts_create:
+          type: integer
+          description: Hinzugefügt am, als UNIX-Timestamp
+
+    config:
+      type: object
+      description: Die Standard-Berechtigungen für neue Teilnehmer (sofern durch 'ucr-access' keine expliziten Berechtigungen gesetzt werden)
+      example:
+        default:
+          editable: false
+          notification: true
+          writable: true
+          attachable: true
+          access_earlier_messages: true
+          access_start: 0
+          access_expire: 0
+          ts_access_start: 0
+          ts_access_expire: 0
+      properties:
+        default:
+          type: object
+          properties:
+            editable:
+              type: boolean
+              description: Moderieren
+            writable:
+              type: boolean
+              description: Schreiben
+            attachable:
+              type: boolean
+              description: Dateien anhängen
+            notification:
+              type: boolean
+              description: Benachrichtigen
+            access_start:
+              type: boolean
+              description: Teilnahme ab
+            access_expire:
+              type: boolean
+              description: Teilnahme bis
+            access_earlier_messages:
+              type: boolean
+              description: Auf Vorherige zugreifen
+            ts_access_start:
+              type: integer
+              description: Teilnahme ab, als UNIX-Timestamp
+            ts_access_expire:
+              type: integer
+              description: Teilnahme bis, UNIX-Timestamp
+
+  securitySchemes:
+    Personal-API-Accesskey:
+      type: apiKey
+      name: accesskey
+      in: query

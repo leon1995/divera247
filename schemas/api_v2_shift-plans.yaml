@@ -1,0 +1,56 @@
+openapi: 3.0.1
+info:
+  title: DIVERA 24/7 RESTful Webservice
+  description: "Die API von DIVERA 24/7 bietet zahlreiche Möglichkeiten, um eigene Dienste anzubinden und Aktionen auszulösen. Für Testzwecke empfehlen wir Ihnen, eine separate Einheit anzulegen. Testeinheiten von zahlenden Kunden werden auf Nachfrage kostenfrei hochgestuft.
+    \n\nBeachten Sie als Nutzer der kostenlosen Version: Innerhalb von fünf Minuten kann nur eine Alarmierung ausgelöst werden.
+    Gespeichert wird nur das Einsatz-Stichwort.
+    Sie können die ALARM-Version mit unbegrenzter Schnittstelle unverbindlich 30 Tage lang testen.
+    Den Test beantragen Sie nach dem Login im Browser unter Verwaltung > Konto > Kontakt- und Vertragsdaten."
+  version: 4.1.0
+servers:
+  - url: https://app.divera247.com
+tags:
+  - name: Shiftplans
+    description: Dienstpläne
+paths:
+  /api/v2/shift-plans:
+    get:
+      tags:
+        - Shiftplans
+      summary: Gibt eine Liste der Dienstpläne zurück
+      responses:
+        200:
+          description: successful
+          content:
+            "application/json":
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      example: 1
+                      description: Eindeutige Id des Dienstplans
+                    name:
+                      type: string
+                      example: Karneval1
+                      description: Name des Dienstplans
+                    config:
+                      type: object
+                      description: Konfiguration des Dienstplans
+                    ts_start:
+                      type: integer
+                      description: Start des Dienstplans
+                      example: 1668161460
+                    ts_end:
+                      type: integer
+                      description: Ende des Dienstplans
+      security:
+        - Personal-API-Accesskey: []
+components:
+  securitySchemes:
+    Personal-API-Accesskey:
+      type: apiKey
+      name: accesskey
+      in: query

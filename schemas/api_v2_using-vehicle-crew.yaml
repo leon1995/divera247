@@ -1,0 +1,112 @@
+openapi: 3.0.1
+info:
+  title: DIVERA 24/7 RESTful Webservice für die Fahrzeugbesatzung
+  description: "Die API von DIVERA 24/7 bietet zahlreiche Möglichkeiten, um eigene Dienste anzubinden und Aktionen auszulösen."
+  version: 4.1.0
+servers:
+  - url: https://app.divera247.com
+tags:
+  - name: Fahrzeugbesatzung
+    description: Methoden zum Hinzufügen und Entfernen von Personen zu Einsatzmitteln
+paths:
+  /api/v2/using-vehicle-crew/add/{id}:
+    post:
+      tags:
+        - Fahrzeugbesatzung
+      summary: Ein oder mehrere Benutzer hinzufügen. War ein Benutzer bereits einem anderen Fahrzeug zugeordnet, wird er von diesem entfernt.
+      parameters:
+        - name: id
+          in: path
+          description: ID des Fahrzeugs
+          schema:
+            type: integer
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                Crew:
+                  type: object
+                  properties:
+                    add:
+                      type: array
+                      items:
+                        type: integer
+                      example: [123]
+                      description: ID des/der Benutzer als Array
+        required: true
+      responses:
+        200:
+          description: successful
+          content: {}
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+      security:
+        - System-API-Accesskey: []
+  /api/v2/using-vehicle-crew/remove/{id}:
+    post:
+      tags:
+        - Fahrzeugbesatzung
+      summary: Bestimmte Nutzer vom Fahrzeug entfernen.
+      parameters:
+        - name: id
+          in: path
+          description: ID des Fahrzeugs
+          schema:
+            type: integer
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                Crew:
+                  type: object
+                  properties:
+                    remove:
+                      type: array
+                      items:
+                        type: integer
+                      example: [123]
+                      description: ID des/der Benutzer als Array
+        required: true
+      responses:
+        200:
+          description: successful
+          content: {}
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+      security:
+        - System-API-Accesskey: []
+  /api/v2/using-vehicle-crew/reset/{id}:
+    delete:
+      tags:
+        - Fahrzeugbesatzung
+      summary: Fahrzeugbesatzung zurücksetzen
+      parameters:
+        - name: id
+          required: true
+          in: path
+          description: ID des Fahrzeugs
+          schema:
+            type: integer
+      responses:
+        200:
+          description: successful
+          content: {}
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+      security:
+        - System-API-Accesskey: []
+components:
+  securitySchemes:
+    System-API-Accesskey:
+      type: apiKey
+      name: accesskey
+      in: query

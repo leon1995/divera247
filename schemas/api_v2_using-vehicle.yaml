@@ -1,0 +1,188 @@
+openapi: 3.0.1
+info:
+  title: DIVERA 24/7 RESTful Webservice für den Fahrzeug-Status
+  description: "Die API von DIVERA 24/7 bietet zahlreiche Möglichkeiten, um eigene Dienste anzubinden und Aktionen auszulösen."
+  version: 4.1.0
+servers:
+  - url: https://app.divera247.com
+tags:
+  - name: Fahrzeug-Status
+    description: Methoden zum Senden und Empfangen von Statusmeldungen von Fahrzeugen
+paths:
+# /using-vehicles/{id}:
+#   get:
+#     tags:
+#       - Fahrzeug-Status
+#     summary: Status setzen
+#     parameters:
+#       - name: id
+#         in: query
+#         description: ID des Fahrzeugs
+#         schema:
+#           type: integer
+#           required: true
+#       required: true
+#     responses:
+#       200:
+#         description: successful
+#         content: {}
+#       403:
+#         description: Accesskey fehlt oder ungültig
+#         content: {}
+#     security:
+#       - System-API-Accesskey: []
+  /api/v2/using-vehicles/get-status/{id}:
+    get:
+      tags:
+        - Fahrzeug-Status
+      summary: Status des Fahrzeugs abrufen
+      parameters:
+        - name: id
+          in: path
+          description: ID des Fahrzeugs
+          schema:
+            type: integer
+          required: true
+      responses:
+        200:
+          description: successful
+          content: {}
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+      security:
+        - System-API-Accesskey: []
+  /api/v2/using-vehicles/set-status/{id}:
+    post:
+      tags:
+        - Fahrzeug-Status
+      summary: Status des Fahrzeugs setzen
+      parameters:
+        - name: id
+          in: path
+          description: ID des Fahrzeugs
+          schema:
+            type: integer
+          required: true
+      requestBody:
+        description: Parameter, die bei der Erstellung eines Alarms mitgegeben werden
+          können
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: integer
+                  description: Reguläre Nummer des Status 0 bis 9 entsprechen dem bekannten Status (0 = Notruf, 1 = Einsatzbereit über Funk, 2 = Einsatzbereit auf Wache, 3 = Einsatz übernommen, 4 = Einsatzstelle an, 5 = Sprechwunsch, 6 = Nicht einsatzbereit, 7 = Patient aufgenommen, 8 = Am Transportziel, 9 = Sonstiger Status nach örtlicher Verwendung)
+                  example: 1
+                status_id:
+                  type: integer
+                  description: 1 bis 9 entsprechen dem jeweiligen FMS-Status (z.B. ID 5 = 'Status 5 - Sprechwunsch', ID 10 bedeutet 'Status 0' (Notruf), alternativ zu 'status'
+                  example: 2
+                status_note:
+                  type: string
+                  description: Freitext-Rückmeldung
+                  example: Stärke 1/5
+                lat:
+                  type: number
+                  description: Breitengrad
+                  example: 51.2584996
+                lng:
+                  type: number
+                  description: Längengrad
+                  example: 7.2309561
+        required: true
+      responses:
+        200:
+          description: successful
+          content: {}
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+      security:
+        - System-API-Accesskey: []
+  /api/v2/using-vehicles/set-status-bulk:
+    post:
+      tags:
+        - Fahrzeug-Status
+      summary: Status mehrerer Fahrzeuge setzen
+      requestBody:
+        description: Parameter, die bei der Erstellung eines Alarms mitgegeben werden können
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Status-Informationen der einzelnen Einsatzfahrzeuge, ausgeschlüsselt nach Alarmierungs-RIC des Fahrzeugs, über die Werte instructions > using_vehicle > mapping kann die Identifizierung auch über eine andere Eigenschaft erfolgen
+              properties:
+                usingVehicles:
+                  type: object
+                  properties:
+                    identifier:
+                      type: object
+                      description: Kennung des Fahrzeugs. Standartmäßig ist das die ric, es können über instructions > using_vehicle > mapping aber auch andere Identifikatoren wie Funkrufname oder Kennzeichen verwendet werden. "identifier" muss mit der entsprechenden Kennung ersetzt werden. Es können beliebig viele Fahrzeuge angegeben werden.
+                      properties:
+                        status:
+                          type: integer
+                          description: Reguläre Nummer des Status 0 bis 9 entsprechen dem bekannten Status (0 = Notruf, 1 = Einsatzbereit über Funk, 2 = Einsatzbereit auf Wache, 3 = Einsatz übernommen, 4 = Einsatzstelle an, 5 = Sprechwunsch, 6 = Nicht einsatzbereit, 7 = Patient aufgenommen, 8 = Am Transportziel, 9 = Sonstiger Status nach örtlicher Verwendung)
+                          example: 1
+                        status_id:
+                          type: integer
+                          description: 1 bis 9 entsprechen dem jeweiligen FMS-Status (z.B. ID 5 = 'Status 5 - Sprechwunsch', ID 10 bedeutet 'Status 0' (Notruf), alternativ zu 'status'
+                          example: 2
+                        status_note:
+                          type: string
+                          description: Freitext-Rückmeldung
+                          example: Stärke 1/5
+                        lat:
+                          type: number
+                          description: Breitengrad
+                          example: 51.2584996
+                        lng:
+                          type: number
+                          description: Längengrad
+                          example: 7.2309561
+                instructions:
+                  type: object
+                  properties:
+                    using_vehicle:
+                      type: object
+                      properties:
+                        mapping:
+                          type: string
+                          example: name
+                          description: "Mögliche Werte: id (Primärschlüssel), name (Funkrufname), number (Kennzeichen), ric (Alarmierungs-RIC), issi (Individual Short Subscriber Identity), opta (Operativ-taktische Adresse), foreign_id (Fremdschlüssel aus anderen Systemen)"
+        required: true
+      responses:
+        200:
+          description: successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkResponse'
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+      security:
+        - System-API-Accesskey: []
+
+components:
+  securitySchemes:
+    System-API-Accesskey:
+      type: apiKey
+      name: accesskey
+      in: query
+  schemas:
+    BulkResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          description: Liste aller Fahrzeuge, die aktualisiert wurden.
+          properties:
+            mzgw-n:
+              type: boolean
+            hlf-1:
+              type: boolean

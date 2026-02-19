@@ -1,0 +1,642 @@
+openapi: 3.0.1
+info:
+  title: DIVERA 24/7 RESTful Webservice
+  description: "Die API von DIVERA 24/7 bietet zahlreiche Möglichkeiten, um eigene Dienste anzubinden und Aktionen auszulösen. Für Testzwecke empfehlen wir Ihnen, eine separate Einheit anzulegen. Testeinheiten von zahlenden Kunden werden auf Nachfrage kostenfrei hochgestuft.
+    \n\nBeachten Sie als Nutzer der kostenlosen Version: Innerhalb von fünf Minuten kann nur eine Alarmierung ausgelöst werden.
+    Gespeichert wird nur das Einsatz-Stichwort.
+    Sie können die ALARM-Version mit unbegrenzter Schnittstelle unverbindlich 30 Tage lang testen.
+    Den Test beantragen Sie nach dem Login im Browser unter Verwaltung > Konto > Kontakt- und Vertragsdaten."
+  version: 4.1.0
+servers:
+- url: https://app.divera247.com
+tags:
+- name: Daten
+  description: Methoden zum Abrufen der vollständigen Daten
+paths:
+  /api/v2/pull/all:
+    get:
+      tags:
+      - Daten
+      summary: Daten gemäß der Berechtigung des aktuellen Benutzers abrufen
+      parameters:
+        - name: ucr
+          in: query
+          description: ID der UserClusterRelation (Identifier der Verknüpfung eines Users zu einer Einheit/Cluster), ohne Angabe des Parameters wird die Stammeinheit geladen
+          schema:
+            type: integer
+        - name: ts_user
+          in: query
+          description: UNIX-Timestamp der letzten Änderung am User-Objekt (Einstellungen und Berechtigungen des Benutzers)
+          schema:
+            type: integer
+        - name: ts_alarm
+          in: query
+          description: UNIX-Timestamp der letzten Änderung am Alarm-Objekt (Einsätze)
+          schema:
+            type: integer
+        - name: ts_news
+          in: query
+          description: UNIX-Timestamp der letzten Änderung am News-Objekt (Mitteilungen)
+          schema:
+            type: integer
+        - name: ts_event
+          in: query
+          description: UNIX-Timestamp der letzten Änderung am Event-Objekt (Termine)
+          schema:
+            type: integer
+        - name: ts_status
+          in: query
+          description: UNIX-Timestamp der letzten Änderung am Status-Objekt (aktueller Status des Benutzers)
+          schema:
+            type: integer
+        - name: ts_statusplan
+          in: query
+          description: UNIX-Timestamp der letzten Änderung am Statusplan-Objekt (terminbasierte Statusplanung des Benutzers)
+          schema:
+            type: integer
+        - name: ts_cluster
+          in: query
+          description: UNIX-Timestamp der letzten Änderung am Cluster-Objekt (Daten und Einstellungen der Einheit)
+          schema:
+            type: integer
+        - name: ts_localmonitor
+          in: query
+          description: UNIX-Timestamp der letzten Änderung an der Monitor-Konfiguration
+          schema:
+            type: integer
+        - name: ts_monitor
+          in: query
+          description: UNIX-Timestamp der letzten Änderung am Monitor-Objekt (Personalverfügbarkeit der Einheit)
+          schema:
+            type: integer
+      responses:
+        200:
+          description: successful
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    description: Enthält alle Objekte, deren Daten sich seit dem jeweiligen Timestamp (z.B. ts_alarm) geändert haben
+                    properties:
+                      ucr:
+                        type: array
+                        description: Mögliche UserClusterRelations (Verknüpfung des Users zu einer Einheit)
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                              example: 574232
+                              description: ID der UserClusterRelation
+                            usergroup_id:
+                              type: integer
+                              example: 523
+                              description: ID der Benutzergruppe
+                            cluster_id:
+                              type: integer
+                              example: 64323
+                              description: ID der Einheit
+                            status_id:
+                              type: integer
+                              example: 1234
+                              description: ID des aktuellen Status
+                            new_messages:
+                              type: integer
+                              example: 2
+                              description: Anzahl neue Mitteilungen und Termine
+                            new_alarms:
+                              type: integer
+                              example: 1
+                              description: Anzahl neue Einsätze
+                            name:
+                              type: string
+                              example: Löschzug Musterstadt
+                              description: Name der Einheit
+                            shortname:
+                              type: string
+                              example: LZ 12
+                              description: Abkürzung der Einheit
+                      ucr_default:
+                        type: integer
+                        example: 643235
+                        description: ID der UserClusterRelation in der Stammeinheit
+                      ucr_active:
+                        type: integer
+                        example: 574232
+                        description: ID der UserClusterRelation im aktuellen Request
+                      ts:
+                        type: integer
+                        description: Aktueller UNIX-Timestamp des Servers
+                      user:
+                        type: object
+                        description: Einstellungen und Berechtigungen des Benutzers
+                        properties:
+                          firstname:
+                            type: string
+                            description: Vorname
+                          lastname:
+                            type: string
+                            description: Nachname
+                          shortname:
+                            type: string
+                            description: Initialen
+                          email:
+                            type: string
+                            description: Benutzername/Login
+                          emails:
+                            type: object
+                            description: Eigene E-Mail-Adressen
+                          status_default:
+                            type: integer
+                            description: Persönlicher Standard-Status bei Zurücksetzen
+                          alarmbehaviour:
+                            type: integer
+                            description: deprecated, wurde durch lokale Einstellungen in der App abgelöst
+                          alarmsound:
+                            type: integer
+                            description: deprecated, wurde durch lokale Einstellungen in der App abgelöst
+                          messagesound:
+                            type: integer
+                            description: deprecated, wurde durch lokale Einstellungen in der App abgelöst
+                          statussound:
+                            type: integer
+                            description: deprecated, wurde durch lokale Einstellungen in der App abgelöst
+                          hide_name_in_monitor:
+                            type: boolean
+                            description: Eigenen Namen verbergen, derzeit nicht in Verwendung
+                          push_alarm:
+                            type: boolean
+                            description: Push-Benachrichtigung bei Alarmierungen
+                          push_message:
+                            type: boolean
+                            description: Push-Benachrichtigung bei Mitteilungen und Terminen
+                          push_statuschange:
+                            type: boolean
+                            description: Push-Benachrichtigung bei Statusänderung
+                          phonenumbers:
+                            type: object
+                            description: Eigene Telefonnummern (dienen dem telefonischen Statussetzen und der Benachrichtigung per SMS/Anruf)
+                          access:
+                            type: object
+                            description: Berechtigungen
+                          geofences:
+                            type: object
+                            description: Geofence-Konfiguration
+                          ts:
+                            type: integer
+                            description: Letzte Änderung als UNIX-Timestamp
+                      alarm:
+                        type: object
+                        description: Für den Nutzer sicht-/editierbare Alarmierungen
+                        properties:
+                          items:
+                            type: object
+                            description: Liste der einzelnen Alarmierungen nach ID, die weitere Defintion der Struktur ist api/v2/alarms zu entnehmen
+                          sorting:
+                            type: array
+                            description: Reihenfolge der Alarmierungen, aufsteigend
+                            items:
+                              type: integer
+                          new:
+                            type: integer
+                            description: Anzahl neuer Alarmierungen
+                          ts:
+                            type: integer
+                            description: Letzte Änderung als UNIX-Timestamp
+                      news:
+                        type: object
+                        description: Für den Nutzer sicht-/editierbare Mitteilungen
+                        properties:
+                          items:
+                            type: object
+                            description: Liste der einzelnen Mitteilungen nach ID, die weitere Defintion der Struktur ist api/v2/news zu entnehmen
+                          sorting:
+                            type: array
+                            description: Reihenfolge der Mitteilungen, aufsteigend
+                            items:
+                              type: integer
+                          new:
+                            type: integer
+                            description: Anzahl neuer Mitteilungen
+                          ts:
+                            type: integer
+                            description: Letzte Änderung als UNIX-Timestamp
+                      event:
+                        type: object
+                        description: Für den Nutzer sicht-/editierbare Termine
+                        properties:
+                          items:
+                            type: object
+                            description: Liste der einzelnen Termine nach ID, die weitere Defintion der Struktur ist api/v2/events zu entnehmen
+                          sorting:
+                            type: array
+                            description: Reihenfolge der Termine, aufsteigend
+                            items:
+                              type: integer
+                          new:
+                            type: integer
+                            description: Anzahl neuer Termine
+                          ts:
+                            type: integer
+                            description: Letzte Änderung als UNIX-Timestamp
+                      status:
+                        type: object
+                        description: Aktueller Status des Benutzers
+                        properties:
+                          status_id:
+                            type: integer
+                            description: ID des aktuellen Status
+                          note:
+                            type: string
+                            description: Status-Notiz
+                          vehicle:
+                            type: integer
+                            description: ID des aktuellen Fahrzeugs
+                          status_skip_statusplan:
+                            type: boolean
+                            description: Alle Termine im Zeitraum überschreiben
+                          status_skip_geofence:
+                            type: boolean
+                            description: Alle Geofences im Zeitraum ignorieren
+                          status_set_date:
+                            type: integer
+                            description: UNIX-Timestamp der letzten Statusänderung
+                          status_reset_date:
+                            type: integer
+                            description: Nächstes Zurücksetzen gemäß UNIX-Timestamp
+                          status_reset_id:
+                            type: integer
+                            description: Status als nächstes zurücksetzen auf
+                          status_log:
+                            type: array
+                            description: Vorherige Status-Änderungen
+                            items:
+                              type: object
+                          status_changes:
+                            type: array
+                            description: Bevorstehende Status-Änderungen
+                            items:
+                              type: object
+                          ts:
+                            type: integer
+                            description: Letzte Änderung als UNIX-Timestamp
+                      statusplan:
+                        type: object
+                        description: terminbasierte Statusplanung
+                        properties:
+                          items:
+                            type: object
+                            description: Liste der einzelnen Termine nach ID
+                            items:
+                              type: object
+                              properties:
+                                id:
+                                  type: integer
+                                  example: 1234
+                                  description: ID des UserClusterRelationStatusPlan
+                                status_plan_category_id:
+                                  type: integer
+                                  example: 1234
+                                  description: ID der Kalender-Kategorie
+                                title:
+                                  type: string
+                                  example: Arbeit
+                                  description: Beschreibung
+                                beginTS:
+                                  type: integer
+                                  example: 1234
+                                  description: Beginn als UNIX-Timestamp
+                                endTS:
+                                  type: integer
+                                  example: 1234
+                                  description: Ende als UNIX-Timestamp
+                                fullday:
+                                  type: boolean
+                                  example: FALSE
+                                  description: ganztägig (0:00 bis 23:59 Uhr)
+                                repeat:
+                                  type: boolean
+                                  example: true
+                                  description: Wiederholung aktivieren
+                                repeat_type:
+                                  type: integer
+                                  example: 2
+                                  description: Wiederholungs-Typ (1 = täglich, 2 = wöchentlich, 3 = monatlich)
+                                repeat_frequency:
+                                  type: integer
+                                  example: 1
+                                  description: Frequenz, alle x Tage/Wochen/Monate wiederholen
+                                repeat_weekly_days:
+                                  type: array
+                                  items:
+                                    type: integer
+                                  example: [1, 2]
+                                  description: Wochentage bei wöchentlicher Wiederholung wenn repeat_type = 2 (1 = Montag, 2 = Dienstag, ...)
+                                repeat_monthly_day:
+                                  type: integer
+                                  example: 1
+                                  description: Fixpunkt bei monatlicher Wiederholung (1 = Tag des Monats, z.B. immer am ersten, 2 = Wochentag, z.B. immer am zweiten Freitag)
+                                repeat_until_bool:
+                                  type: boolean
+                                  example: FALSE
+                                  description: Laufzeit begrenzen zeitlich einschränken
+                                repeat_untilTS:
+                                  type: integer
+                                  example: 0
+                                  description: Wiederholung bis als UNIX-Timestamp
+                                during_status_id:
+                                  type: integer
+                                  example: 1
+                                  description: ID des Status während des Termins
+                                during_status_vehicle:
+                                  type: integer
+                                  example: 123
+                                  description: ID des Fahrzeugs während des Termins
+                                during_status_note:
+                                  type: string
+                                  example: Mit dem Fahrrad unterwegs
+                                  description: Status-Notiz (wird automatisch zu Beginn des Termins gesetzt)
+                                after_status_id:
+                                  type: integer
+                                  example: 2
+                                  description: ID des Status nach dem Termin
+                                prio:
+                                  type: boolean
+                                  example: FALSE
+                                  description: Priorität (überschreibt Einträge, die zur gleichen Zeit stattfinden)
+                                public:
+                                  type: boolean
+                                  example: FALSE
+                                  description: Beschreibung (title) ist für Führungskräfte in der Vorausplanung sichtbar
+                          sorting:
+                            type: array
+                            description: deprecated, die Reihenfolge ist anhand der Items zu ermitteln
+                            items:
+                              type: integer
+                          categories:
+                            type: array
+                            description: deprecated, die Statusplan-Kategorien sind unter cluster.statusplancategory und cluster.statusplancategorysorting zu finden
+                            items:
+                              type: integer
+                          ts:
+                            type: integer
+                            description: Letzte Änderung als UNIX-Timestamp
+                      cluster:
+                        type: object
+                        description: Daten und Einstellungen der Einheit
+                        properties:
+                          id:
+                            type: integer
+                            example: 574232
+                            description: ID der Einheit
+                          is_root:
+                            type: boolean
+                            example: FALSE
+                            description: Ist übergeordnete (Mutter-) Einheit
+                          version_id:
+                            type: integer
+                            example: 574232
+                            description: Genutzte Version von DIVERA 24/7
+                          name:
+                            type: string
+                            example: Löschzug Musterstadt
+                            description: Name der Einheit
+                          shortname:
+                            type: string
+                            example: LZ 12
+                            description: Abkürzung der Einheit
+                          status_default:
+                            type: integer
+                            example: 123
+                            description: Standard-Status bei Zurücksetzen
+                          status_default_overwrite_by_user:
+                            type: boolean
+                            example: FALSE
+                            description: Standard-Status kann von Nutzer überschrieben werden
+                          address:
+                            type: object
+                            description: Adresse der Einheit
+                          consumer:
+                            type: object
+                            description: Stammdaten der Benutzer
+                          consumersorting:
+                            type: array
+                            description: Sortierte IDs der Benutzer
+                            items:
+                              type: integer
+                          group:
+                            type: object
+                            description: Gruppen
+                          groupsorting:
+                            type: array
+                            description: Sortierte IDs der Gruppen
+                            items:
+                              type: integer
+                          alarmcode:
+                            type: object
+                            description: Alarmvorlagen
+                          alarmcodesorting:
+                            type: array
+                            description: Sortierte IDs der Alarmvorlagen
+                            items:
+                              type: integer
+                          qualification:
+                            type: object
+                            description: Qualifikationen
+                          qualificationsorting:
+                            type: array
+                            description: Sortierte IDs der Qualifikationen
+                            items:
+                              type: integer
+                          operationrole:
+                            type: object
+                            description: Funktionen
+                          operationrolesorting:
+                            type: array
+                            description: Sortierte IDs der Funktionen
+                            items:
+                              type: integer
+                          status:
+                            type: object
+                            description: Status
+                          statussorting:
+                            type: array
+                            description: Sortierte IDs der Status nach Zeit
+                            items:
+                              type: integer
+                          statussorting_alarm:
+                            type: array
+                            description: Sortierte IDs der Status zur Einsatzrückmeldung
+                            items:
+                              type: integer
+                          statussorting_statusgeber:
+                            type: array
+                            description: Sortierte IDs der Status im Statusgeber
+                            items:
+                              type: integer
+                          statussorting_statusplaner:
+                            type: array
+                            description: Sortierte IDs der Status im Planer
+                            items:
+                              type: integer
+                          statussorting_geofence:
+                            type: array
+                            description: Sortierte IDs der Status im Geofence
+                            items:
+                              type: integer
+                          statusplancategory:
+                            type: object
+                            description: Kalender-Kategorien
+                          statusplancategorysorting:
+                            type: array
+                            description: Sortierte IDs der Kalender-Kategorien
+                            items:
+                              type: integer
+                          vehicle:
+                            type: object
+                            description: Fahrzeuge
+                          vehiclesorting:
+                            type: array
+                            description: Sortierte IDs der Fahrzeuge
+                            items:
+                              type: integer
+                          fms_status:
+                            type: object
+                            description: Fahrzeug-Status
+                          crewtarget:
+                            type: object
+                            description: Warnschwellen
+                          settings:
+                            type: object
+                            description: Weitere Einstellungen der Einheit
+                          sponsor:
+                            type: object
+                            description: Sponsor-Informationen der Einheit oder Werbepartner der kostenlosen Version
+                          reporttypes:
+                            type: object
+                            description: Reporttype-Formulare
+                          ts:
+                            type: integer
+                            description: Letzte Änderung als UNIX-Timestamp
+                      localmonitor:
+                        type: object
+                        description: Monitor-Konfiguration
+                        properties:
+                          items:
+                            type: object
+                            description: Konfiguration der einzelnen Monitore
+                          sorting:
+                            type: array
+                            description: Reihenfolge der Monitore im Menü
+                            items:
+                              type: integer
+                          ts:
+                            type: integer
+                            description: Letzte Änderung als UNIX-Timestamp
+                      monitor:
+                        type: object
+                        description: Personalverfügbarkeit der Einheit
+                        properties:
+                          1:
+                            type: string
+                            description: Anzahl eingetragener Nutzer, getrennt nach Status-ID, wiederum aufbereitet und getrennt nach Qualification-ID (anonyme Ansicht)
+                          2:
+                            type: integer
+                            description: IDs eingetragener Nutzer, getrennt nach Status-ID, wiederum aufbereitet und getrennt nach Qualification-ID (setzt die Berechtigung "Namen und Statusdetails anzeigen" voraus)
+                          3:
+                            type: object
+                            description: Alle Nutzer mit ID, Status-ID, Timestamp, Notiz und Fahrzeug-ID (setzt die Berechtigung "Namen und Statusdetails anzeigen" voraus)
+                          ts:
+                            type: integer
+                            description: Letzte Änderung als UNIX-Timestamp
+
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+      security:
+      - Personal-API-Accesskey: []
+  /api/v2/pull/vehicle-status:
+    get:
+      tags:
+      - Daten/ Informationen
+      summary: Fahrzeugstatus abrufen
+      responses:
+        200:
+          description: successful
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      description: Enthält alle Fahrzeuge mit Funkrufname, Fahrzeug-Typ, Status, Koordinaten, aktueller Rückmeldung und Besatzung
+                      properties:
+                        id:
+                          type: integer
+                          example: 75423
+                          description: ID des Fahrzeugs
+                        name:
+                          type: string
+                          example: 01-LF20-01
+                          description: Funkrufname
+                        shortname:
+                          type: string
+                          example: LF
+                          description: Fahrzeugtyp abgekürzt
+                        fullname:
+                          type: string
+                          example: Löschgruppenfahrzeug
+                          description: Fahrzeugtyp ausgeschrieben
+                        fmsstatus:
+                          type: integer
+                          example: 5
+                          description: Bedeutung des Fahrzeug-Status (z.B. kann der Fahrzeug-Status mit ID kann für den Status "5 - Sprechwunsch" stehen)
+                        fmsstatus_id:
+                          type: integer
+                          example: 5
+                          description: ID des Fahrzeug-Status
+                        fmsstatus_note:
+                          type: string
+                          example: Anfahrt auf Sicht
+                          description: Notiz/Freitext-Rückmeldung
+                        fmsstatus_ts:
+                          type: integer
+                          example: 1690299635
+                          description: UNIX-Timestamp
+                        crew:
+                          type: array
+                          description: Zugeordnete Benutzer
+                          items:
+                            type: object
+                        lat:
+                          type: number
+                          description: Breitengrad
+                        lng:
+                          type: number
+                          description: Längengrad
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+      security:
+      - System-API-Accesskey: []
+
+components:
+  securitySchemes:
+    Personal-API-Accesskey:
+      type: apiKey
+      name: accesskey
+      in: query
+    System-API-Accesskey:
+      type: apiKey
+      name: accesskey
+      in: query

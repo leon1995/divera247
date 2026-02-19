@@ -1,0 +1,248 @@
+openapi: 3.0.1
+info:
+  title: DIVERA 24/7 RESTful Webservice für Dashboards
+  description: "Die API von DIVERA 24/7 bietet zahlreiche Möglichkeiten, um eigene Dienste anzubinden und Aktionen auszulösen. Für Testzwecke empfehlen wir Ihnen, eine separate Einheit anzulegen. Testeinheiten von zahlenden Kunden werden auf Nachfrage kostenfrei hochgestuft.
+    \n\nDashboards dienen der flexiblen Zusammenstellung von Informationen. Mit dem neuen Modul können Alarmierungen, Mitteilungen, Termine, Nachrichten-Kanäle des Messengers und natürlich diverse Elemente der Monitor angeordnet werden."
+  version: 4.1.0
+servers:
+  - url: https://app.divera247.com
+tags:
+  - name: CRUD
+    description: Die wichtigsten Methoden zum Erstellen, Bearbeiten, Archivieren und Löschen von Dashboards
+paths:
+  /api/v2/dashboards:
+    get:
+      tags:
+        - CRUD
+      summary: Methode zum Abrufen aller Dashboards
+      responses:
+        200:
+          description: successful
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      items:
+                        type: object
+                        description: Liste der einzelnen Dashboards nach ID
+                        additionalProperties:
+                          $ref: '#/components/schemas/dashboard-result'
+                      sorting:
+                        type: array
+                        description: Reihenfolge der Dashboards
+                        items:
+                          type: integer
+                  ucr:
+                    type: integer
+                    description: ID der UserClusterRelation im aktuellen Request
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+        404:
+          description: Objekt nicht gefunden oder Zugriff nicht gestattet
+          content: {}
+      security:
+        - Personal-API-Accesskey: []
+    post:
+      tags:
+        - CRUD
+      summary: Methode zum Erstellen eines neuen Dashboards
+      requestBody:
+        description: Parameter im JSON-Format
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/dashboard-input'
+      responses:
+        200:
+          description: successful
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/dashboard-result'
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+        404:
+          description: Objekt nicht gefunden oder Zugriff nicht gestattet
+          content: {}
+      security:
+        - Personal-API-Accesskey: []
+  /api/v2/dashboards/{id}:
+    get:
+      tags:
+        - CRUD
+      summary: Methode zum Anzeigen eines Dashbiards anhand der ID
+      parameters:
+        - name: id
+          in: path
+          description: ID des Dashboards
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: successful
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/dashboard-result'
+                  ucr:
+                    type: integer
+                    description: ID der UserClusterRelation im aktuellen Request
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+        404:
+          description: Objekt nicht gefunden oder Zugriff nicht gestattet
+          content: {}
+      security:
+        - Personal-API-Accesskey: []
+    put:
+      tags:
+        - CRUD
+      summary: Methode zum Bearbeiten des Dashboards
+      parameters:
+        - name: id
+          in: path
+          description: ID des Dashboards
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        description: Parameter im JSON-Format
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/dashboard-input'
+        required: true
+      responses:
+        200:
+          description: successful
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/dashboard-result'
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+        404:
+          description: Objekt nicht gefunden oder Zugriff nicht gestattet
+          content: {}
+      security:
+        - Personal-API-Accesskey: []
+    delete:
+      tags:
+        - CRUD
+      summary: Methode zum Löschen des Dashboards
+      parameters:
+        - name: id
+          in: path
+          description: ID des Dashboards
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: successful
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/success'
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+        404:
+          description: Objekt nicht gefunden oder Zugriff nicht gestattet
+          content: {}
+      security:
+        - Personal-API-Accesskey: []
+
+components:
+  schemas:
+
+    success:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: TRUE
+        data:
+          type: object
+        ucr:
+          type: integer
+          description: ID der UserClusterRelation im aktuellen Request
+
+    dashboard-input:
+      type: object
+      properties:
+        Dashboard:
+          type: object
+          properties:
+            template_type:
+              type: integer
+              example: 1
+              description: Templatetyp
+            access_type:
+              type: integer
+              example: 2
+              description: Berechtigungstyp
+            name:
+              type: string
+              example: Alarmmonitor 1. Abmarsch
+              description: Name des Dashboard im Menü
+            config:
+              type: object
+
+    dashboard-result:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 123
+          description: ID/Primärschlüssel
+        cluster_id:
+          type: integer
+          example: 456
+          description: ID der Einheit
+        template_type:
+          type: integer
+          example: 1
+          description: Templatetyp
+        access_type:
+          type: integer
+          example: 2
+          description: Berechtigungstyp
+        name:
+          type: string
+          example: Alarmmonitor 1. Abmarsch
+          description: Name des Dashboard im Menü
+        config:
+          type: object
+
+  securitySchemes:
+    Personal-API-Accesskey:
+      type: apiKey
+      name: accesskey
+      in: query

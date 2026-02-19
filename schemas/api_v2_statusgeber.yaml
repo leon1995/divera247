@@ -1,0 +1,76 @@
+openapi: 3.0.1
+info:
+  title: DIVERA 24/7 RESTful Webservice für den persönlichen Status
+  description: "Die API von DIVERA 24/7 bietet zahlreiche Möglichkeiten, um eigene Dienste anzubinden und Aktionen auszulösen."
+  version: 4.1.0
+servers:
+- url: https://app.divera247.com
+tags:
+- name: Statusgeber
+  description: Methoden zum Senden von Statusmeldungen von Nutzern und Fahrzeugen
+paths:
+  /api/v2/statusgeber/set-status:
+    post:
+      tags:
+      - Statusgeber
+      summary: Status setzen
+      requestBody:
+        description: Parameter, die bei der Erstellung eines Alarms mitgegeben werden
+          können
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                Status:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      example: 123
+                      description: ID des neuen Status
+                    vehicle:
+                      type: integer
+                      example: 247
+                      description: ID des Fahrzeugs, dem der Nutzer zugewiesen werden soll - Zuordnung erlischt bei erneutem Statuswechsel
+                    note:
+                      type: string
+                      example: Komme mit dem Fahrrad
+                      description: Freitext zur Statusmeldung - Erlischt bei erneutem Statuswechsel
+                    reset_date:
+                      type: integer
+                      example: 1738752053
+                      description: Zeitpunkt als UNIX-Zeitstempel, an dem der Status zurückgesetzt werden soll
+                    reset_to:
+                      type: integer
+                      example: 456
+                      description: ID des Folgestatus bei Zurücksetzen
+                    alarm_skip:
+                      type: boolean
+                      example: TRUE
+                      description: Statusänderung ignorieren wenn gerade ein Einsatz anliegt
+                    status_skip_statusplan:
+                      type: boolean
+                      example: TRUE
+                      description: Alle Termine im Zeitraum überschreiben
+                    status_skip_geofence:
+                      type: boolean
+                      example: TRUE
+                      description: Alle Geofences im Zeitraum ignorieren
+        required: true
+      responses:
+        200:
+          description: successful
+          content: {}
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+      security:
+        - Personal-API-Accesskey: []
+
+components:
+  securitySchemes:
+    Personal-API-Accesskey:
+      type: apiKey
+      name: accesskey
+      in: query

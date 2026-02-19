@@ -1,0 +1,788 @@
+openapi: 3.0.1
+info:
+  title: DIVERA 24/7 RESTful Webservice für Termine
+  description: "Die API von DIVERA 24/7 bietet zahlreiche Möglichkeiten, um eigene Dienste anzubinden und Aktionen auszulösen. Für Testzwecke empfehlen wir Ihnen, eine separate Einheit anzulegen. Testeinheiten von zahlenden Kunden werden auf Nachfrage kostenfrei hochgestuft.
+    \n\nBeachten Sie als Nutzer der kostenlosen Version: Innerhalb von fünf Minuten kann nur eine Termin ausgelöst werden.
+    Gespeichert wird nur das Termin-Stichwort.
+    Sie können die ALARM-Version mit unbegrenzter Schnittstelle unverbindlich 30 Tage lang testen.
+    Den Test beantragen Sie nach dem Login im Browser unter Verwaltung > Konto > Kontakt- und Vertragsdaten."
+  version: 4.1.0
+servers:
+  - url: https://app.divera247.com
+tags:
+  - name: CRUD
+    description: Die wichtigsten Methoden zum Erstellen, Bearbeiten, Archivieren und Löschen von Termine
+  - name: Weitere
+    description: Zusätzliche Methoden um auf Termine zu reagieren
+paths:
+  /api/v2/events:
+    get:
+      tags:
+        - CRUD
+      summary: Methode zum Abrufen aller nicht archivierten Termine
+      responses:
+        200:
+          description: successful
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      items:
+                        type: object
+                        description: Liste der einzelnen Termine nach ID
+                        additionalProperties:
+                          $ref: '#/components/schemas/event-result'
+                      sorting:
+                        type: array
+                        description: Reihenfolge der Termine, absteigend
+                        items:
+                          type: integer
+                  ucr:
+                    type: integer
+                    description: ID der UserClusterRelation im aktuellen Request
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+        404:
+          description: Objekt nicht gefunden oder Zugriff nicht gestattet
+          content: {}
+      security:
+        - Personal-API-Accesskey: []
+    post:
+      tags:
+        - CRUD
+      summary: Methode zum Erstellen einer neuen Termin
+      requestBody:
+        description: Parameter im JSON-Format
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/event-input'
+      responses:
+        200:
+          description: successful
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/event-result'
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+        404:
+          description: Objekt nicht gefunden oder Zugriff nicht gestattet
+          content: {}
+      security:
+        - Personal-API-Accesskey: []
+  /api/v2/events/{id}:
+    get:
+      tags:
+        - CRUD
+      summary: Methode zum Anzeigen des Termins
+      parameters:
+        - name: id
+          in: path
+          description: ID des Termins
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: successful
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/event-result'
+                  ucr:
+                    type: integer
+                    description: ID der UserClusterRelation im aktuellen Request
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+        404:
+          description: Objekt nicht gefunden oder Zugriff nicht gestattet
+          content: {}
+      security:
+        - Personal-API-Accesskey: []
+    put:
+      tags:
+        - CRUD
+      summary: Methode zum Bearbeiten des Termins
+      parameters:
+        - name: id
+          in: path
+          description: ID des Termins
+          required: true
+          schema: {}
+      requestBody:
+        description: Parameter im JSON-Format
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/event-input'
+        required: true
+      responses:
+        200:
+          description: successful
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/event-result'
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+        404:
+          description: Objekt nicht gefunden oder Zugriff nicht gestattet
+          content: {}
+      security:
+        - Personal-API-Accesskey: []
+    delete:
+      tags:
+        - CRUD
+      summary: Methode zum Löschen des Termins
+      parameters:
+        - name: id
+          in: path
+          description: ID des Termins
+          required: true
+          schema: {}
+      responses:
+        200:
+          description: successful
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/success'
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+        404:
+          description: Objekt nicht gefunden oder Zugriff nicht gestattet
+          content: {}
+      security:
+        - Personal-API-Accesskey: []
+  /api/v2/events/attachment/{id}:
+    post:
+      tags:
+        - CRUD
+      summary: Methode zum Hinzufügen eines Anhangs
+      parameters:
+        - name: id
+          in: path
+          description: ID der Nachricht
+          required: true
+          schema: {}
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - Attachment[upload]
+                - Attachment[title]
+                - Attachment[description]
+              properties:
+                Attachment[upload]:
+                  description: Der Anhang als binary-string
+                  type: string
+                Attachment[title]:
+                  description: Titel des Anhangs
+                  type: string
+                Attachment[description]:
+                  description: Beschreibung des Anhangs
+                  type: string
+      responses:
+        200:
+          description: successful
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/success'
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+        404:
+          description: Objekt nicht gefunden oder Zugriff nicht gestattet
+          content: {}
+      security:
+        - Personal-API-Accesskey: []
+  /api/v2/events/archive/{id}:
+    post:
+      tags:
+        - CRUD
+      summary: Methode zum Archivieren des Termins
+      parameters:
+        - name: id
+          in: path
+          description: ID des Termins
+          required: true
+          schema: {}
+      responses:
+        200:
+          description: successful
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/success'
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+        404:
+          description: Objekt nicht gefunden oder Zugriff nicht gestattet
+          content: {}
+      security:
+        - Personal-API-Accesskey: []
+  /api/v2/events/confirm/{id}:
+    post:
+      tags:
+        - Weitere
+      summary: Methode zum Erstellen einer Rückmeldung
+      parameters:
+        - name: id
+          in: path
+          description: ID des Termins
+          required: true
+          schema: {}
+      requestBody:
+        description: Parameter im JSON-Format
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                Event:
+                  type: object
+                  properties:
+                    participation:
+                      type: integer
+                      description: Rückmeldung (1 = Ja, 2 = Unsicher, 3 = Nein)
+                    custom_answer:
+                      type: string
+                      description: Freitext-Rückmeldung
+      responses:
+        200:
+          description: successful
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/success'
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+        404:
+          description: Objekt nicht gefunden oder Zugriff nicht gestattet
+          content: {}
+      security:
+        - Personal-API-Accesskey: []
+  /api/v2/events/read/{id}:
+    post:
+      tags:
+        - Weitere
+      summary: Methode um die Termin als gelesen zu markieren
+      parameters:
+        - name: id
+          in: path
+          description: ID des Termins
+          required: true
+          schema: {}
+      responses:
+        200:
+          description: successful
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/success'
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+        404:
+          description: Objekt nicht gefunden oder Zugriff nicht gestattet
+          content: {}
+      security:
+        - Personal-API-Accesskey: []
+  /api/v2/events/reach/{id}:
+    get:
+      tags:
+        - Weitere
+      summary: Methode um die Reichweite (emfangen, gelesen, beantwortet) abzurufen
+      parameters:
+        - name: id
+          in: path
+          description: ID des Termins
+          required: true
+          schema: {}
+      responses:
+        200:
+          description: successful
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      transports:
+                        type: object
+                        description: Abgeschlossene Versand-Prozesse
+                      received:
+                        type: object
+                        description: Benachrichtigung erhalten (Push/Pager/SMS/Anruf)
+                      viewed:
+                        type: object
+                        description: Meldung gelesen
+                      confirmed:
+                        type: object
+                        description: Aktive Rückmeldung
+                  ucr:
+                    type: integer
+                    description: ID der UserClusterRelation im aktuellen Request
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+        404:
+          description: Objekt nicht gefunden oder Zugriff nicht gestattet
+          content: {}
+      security:
+        - Personal-API-Accesskey: []
+  /api/v2/events/download/{id}:
+    get:
+      tags:
+        - Weitere
+      summary: Methode zum Herunterladen des Termins inkl. Teilnahme-Rückmeldungen als PDF-Datei
+      parameters:
+        - name: id
+          in: path
+          description: ID des Termins
+          required: true
+          schema: {}
+      responses:
+        200:
+          description: successful
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/success'
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+        404:
+          description: Objekt nicht gefunden oder Zugriff nicht gestattet
+          content: {}
+      security:
+        - Personal-API-Accesskey: []
+  /api/v2/events/ics:
+    get:
+      tags:
+        - Weitere
+      summary: Methode zum Herunterladen eigenen Termine als ICS-Datei
+      responses:
+        200:
+          description: successful
+          content:
+            'text/calendar':
+              schema:
+                type: string
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+        404:
+          description: Objekt nicht gefunden oder Zugriff nicht gestattet
+          content: {}
+      security:
+        - Personal-API-Accesskey: []
+  /api/v2/events/reset-responses/{id}:
+    delete:
+      tags:
+        - Weitere
+      summary: Methode zum Rücksetzen aller Teilnahme-Rückmeldungen
+      parameters:
+        - name: id
+          in: path
+          description: ID des Termins
+          required: true
+          schema: {}
+      responses:
+        200:
+          description: successful
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/success'
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+        404:
+          description: Objekt nicht gefunden oder Zugriff nicht gestattet
+          content: {}
+      security:
+        - Personal-API-Accesskey: []
+
+components:
+  schemas:
+
+    success:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: TRUE
+        data:
+          type: object
+        ucr:
+          type: integer
+          description: ID der UserClusterRelation im aktuellen Request
+
+    event-input:
+      type: object
+      properties:
+        Event:
+          type: object
+          required:
+            - notification_type
+            - title
+          properties:
+            foreign_id:
+              type: string
+              example: 12345678
+              description: Fremdschlüssel
+            title:
+              type: string
+              example: Weihnachtsfeier
+              description: Titel
+            text:
+              type: string
+              example: Gemütlicher Jahresausklang, eingeladen sind auch eure Partner
+              description: Meldung
+            address:
+              type: string
+              example: Ristorante Alfredo
+              description: Ort
+            ts_start:
+              type: integer
+              description: Beginn des Termins als UNIX-Timestamp
+            ts_end:
+              type: integer
+              description: Ende des Termins als UNIX-Timestamp
+            fullday:
+              type: boolean
+              description: ganztägiger Termin
+            days:
+              type: integer
+              description: Dauer in Tagen
+            private_mode:
+              type: boolean
+              description: Sichtbarkeit privat
+            notification_type:
+              type: number
+              description: Empfänger-Auswahl (1 = Ausgewählte Standorte (nur in der PRO-Version), 2 = Alle des Standortes, 3 = Ausgewählte Gruppen, 4 = Ausgewählte Benutzer)
+            send_push:
+              type: boolean
+              description: Push-Nachricht an die App senden (der Wert wird nach dem Versand auf FALSE zurückgesetzt)
+            send_sms:
+              type: boolean
+              description: SMS senden (der Wert wird nach dem Versand auf FALSE zurückgesetzt, kostenpflichtig)
+            send_call:
+              type: boolean
+              description: Sprachanruf senden (der Wert wird nach dem Versand auf FALSE zurückgesetzt, kostenpflichtig)
+            send_mail:
+              type: boolean
+              description: E-Mail senden (der Wert wird nach dem Versand auf FALSE zurückgesetzt, Adresse muss zuvor durch den Benutzer bestätigt werden)
+            send_pager:
+              type: boolean
+              description: An verknüpfte Pager senden (der Wert wird nach dem Versand auf FALSE zurückgesetzt, je nach Setup e*Message-/UNITRONIC-/TETRA-Pager)
+            show_result_count:
+              type: integer
+              description: Sichtbarkeit der anonymen Rückmeldungen (0 = Nur für Autor, 1 = Für alle mit Schreibrecht, 2 = Sichtbar für alle)
+            show_result_names:
+              type: integer
+              description: Sichtbarkeit der Rückmeldungen mit Name und Freitext-Antwort (0 = Nur für Autor, 1 = Für alle mit Schreibrecht, 2 = Sichtbar für alle)
+            multiple_answers:
+              type: boolean
+              example: TRUE
+              description: Mehrere Antworten zulassen
+            custom_answers:
+              type: boolean
+              example: TRUE
+              description: Freitext-Antwort zulassen
+            response_type:
+              type: integer
+              description: Antwort-Möglichkeiten (1 = Ja, 2 = Unsicher, 3 = Nein)
+            response_until:
+              type: boolean
+              example: TRUE
+              description: Rückmeldung zeitlich begrenzen
+            ts_response:
+              type: integer
+              description: Rückmeldung endet als UNIX-Timestamp
+            uploads:
+              type: string
+              description: Anhänge uploaden als Binary
+              example: Binary
+            cluster:
+              type: array
+              description: IDs der Standorte mit Empfänger-Auswahl (nur für einheitsübergreifende Alarmierungen in der PRO-Version, bedingt 'notification_type' = 1)
+              example: { "123":{"notification_type":2}, "456":{"notification_type":3}, "789":{"notification_type":4} }
+              items:
+                type: object
+                description: ID der Untereinheit der Index, als Wert im Objekt den Typ der Empfänger-Auswahl innerhalb der Untereinheit, die IDs der Gruppen und Benutzer in den übergeordneten Arrays 'usingGroups' und 'usingUserClusterRelations' übermitteln)
+                properties:
+                  notification_type:
+                    type: integer
+            group:
+              type: array
+              description: IDs der Gruppen (bedingt 'notification_type' = 1 oder 3). Statt der IDs kann über die Angabe in `instructions.group` auch der Name der Gruppe übergeben werden.
+              example: [1,2,3,4]
+              items:
+                type: integer
+            user_cluster_relation:
+              type: array
+              description: IDs der Benutzer (bedingt 'notification_type' = 1 oder 4). Statt der IDs kann über die Angabe in `instructions.user_cluster_relation` auch der eingetragene Fremdschlüssel des Nutzers oder Status-IDs übergeben werden.
+              example: [1,2,3,4]
+              items:
+                type: integer
+        Reminder:
+          type: object
+          properties:
+            ts:
+              type: integer
+              description: Zeitpunkt der Erinnerung als UNIX-Timestamp
+            send_push:
+              type: boolean
+              description: Als Erinnerung eine Push-Nachricht an die App senden
+            send_mail:
+              type: boolean
+              description: Als Erinnerung eine E-Mail-Nachricht senden
+        usingGroups:
+          type: array
+          description: IDs der Gruppen
+          example: [1,2,3,4]
+          items:
+            type: integer
+        usingUserClusterRelations:
+          type: array
+          description: IDs der UCRs
+          example: [1,2,3,4]
+          items:
+            type: integer
+        instructions:
+          type: object
+          properties:
+            cluster:
+              type: object
+              properties:
+                mapping:
+                  type: string
+                  example: id
+                  description: "Mögliche Werte: id (Primärschlüssel), title (Bezeichnung)"
+            group:
+              type: object
+              properties:
+                mapping:
+                  type: string
+                  example: id
+                  description: "Mögliche Werte: id (Primärschlüssel), title (Bezeichnung)"
+            user_cluster_relation:
+              type: object
+              properties:
+                mapping:
+                  type: string
+                  example: id
+                  description: "Mögliche Werte: id (Primärschlüssel), foreign_id (Fremdschlüssel), status_id (Aktuelle ID des Status)"
+
+    event-result:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 123
+          description: ID/Primärschlüssel
+        foreign_id:
+          type: string
+          example: 12345678
+          description: Fremdschlüssel
+        author_id:
+          type: integer
+          example: 123456789
+          description: ID des Nutzers (UserClusterRelation)
+        date:
+          type: integer
+          description: Terminszeit als UNIX-Timestamp
+        title:
+          type: string
+          example: Weihnachtsfeier
+          description: Titel
+        text:
+          type: string
+          example: Gemütlicher Jahresausklang, eingeladen sind auch euren Partner
+          description: Meldung
+        address:
+          type: string
+          example: Ristorante Alfredo
+          description: Ort
+        cluster:
+          type: array
+          items:
+            type: integer
+          description: IDs der Standorte (bedingt 'notification_type' = 1)
+        group:
+          type: array
+          items:
+            type: integer
+          description: IDs der Gruppen (bedingt 'notification_type' = 1 oder 3)
+        user_cluster_relation:
+          type: array
+          items:
+            type: integer
+          description: IDs der Benutzer (bedingt 'notification_type' = 1 oder 4)
+        private_mode:
+          type: boolean
+          description: Sichtbarkeit privat
+        notification_type:
+          type: integer
+          description: Empfänger-Auswahl (1 = Ausgewählte Standorte, 2 = Alle des Standortes, 3 = Ausgewählte Gruppen, 4 = Ausgewählte Benutzer)
+        send_push:
+          type: boolean
+          description: Push-Nachricht an die App senden (der Wert wird nach dem Versand auf FALSE zurückgesetzt)
+        send_sms:
+          type: boolean
+          description: SMS senden (der Wert wird nach dem Versand auf FALSE zurückgesetzt, kostenpflichtig)
+        send_call:
+          type: boolean
+          description: Sprachanruf senden (der Wert wird nach dem Versand auf FALSE zurückgesetzt, kostenpflichtig)
+        send_mail:
+          type: boolean
+          description: E-Mail senden (der Wert wird nach dem Versand auf FALSE zurückgesetzt, Adresse muss zuvor durch den Benutzer bestätigt werden)
+        send_pager:
+          type: boolean
+          description: An verknüpfte Pager senden (der Wert wird nach dem Versand auf FALSE zurückgesetzt, je nach Setup e*Message-/UNITRONIC-/TETRA-Pager)
+        send_reminder:
+          type: boolean
+          description: Erinnerung senden
+        reminder:
+          type: object
+          properties:
+            ts:
+              type: integer
+              description: Zeitpunkt als UNIX-Timestamp
+            send_push:
+              type: boolean
+              description: Push-Nachricht an die App senden (der Wert wird nach dem Versand auf FALSE zurückgesetzt)
+            send_mail:
+              type: boolean
+              description: E-Mail senden (der Wert wird nach dem Versand auf FALSE zurückgesetzt, Adresse muss zuvor durch den Benutzer bestätigt werden)
+            executed:
+              type: boolean
+              description: Bereits ausgeführt
+        new:
+          type: boolean
+          description: Neu/Umngelesen
+        editable:
+          type: boolean
+          description: Bearbeitbar
+        answerable:
+          type: boolean
+          description: Beantwortbar
+        hidden:
+          type: boolean
+          description: Entwurf
+        deleted:
+          type: boolean
+          description: Im Archiv, nur noch für Schreibberechtigte zugänglich
+        show_result_count:
+          type: integer
+          description: Sichtbarkeit der anonymen Rückmeldungen (0 = Nur für Autor, 1 = Für alle mit Schreibrecht, 2 = Sichtbar für alle)
+        show_result_names:
+          type: integer
+          description: Sichtbarkeit der Rückmeldungen mit Name und Freitext-Antwort (0 = Nur für Autor, 1 = Für alle mit Schreibrecht, 2 = Sichtbar für alle)
+        multiple_answers:
+          type: boolean
+          example: TRUE
+          description: Mehrere Antworten zulassen
+        custom_answers:
+          type: boolean
+          example: TRUE
+          description: Freitext-Antwort zulassen
+        response_type:
+          type: integer
+          description: Antwort-Möglichkeiten (0 = Ohne Antwort, 1 = Ja/Nein, 2 = Ja/Unsicher/Nein)
+        response_until:
+          type: boolean
+          example: TRUE
+          description: Rückmeldung zeitlich begrenzen
+        ts_response:
+          type: integer
+          description: Rückmeldung endet als UNIX-Timestamp
+        access_count:
+          type: boolean
+          example: TRUE
+          description: Nutzer darf auf anonyme Rückmeldungen zugreifen
+        access_names:
+          type: boolean
+          example: TRUE
+          description: Nutzer darf auf Rückmeldungen mit Name und Freitext-Antwort zugreifen
+        participation:
+          type: boolean
+          example: TRUE
+          description: Eigene Antwort (0 = Ohne Antwort, 1 = Ja/Nein, 2 = Ja/Unsicher/Nein)
+        note:
+          type: string
+          example: bin dabei!
+          description: Eigene Freitext-Antwort
+
+        ucr_adressed:
+          type: array
+          items:
+            type: integer
+          description: Adressierte Benutzer
+        ucr_answered:
+          type: array
+          items:
+            type: integer
+          description: Rückmeldungen der Benutzer
+        ucr_self_addressed:
+          type: boolean
+          description: Selbst adressiert, Rückmeldung ist möglich
+        count_recipients:
+          type: integer
+          description: Anzahl der Empfänger
+        count_read:
+          type: integer
+          description: Anzahl gelesen
+
+        ts_create:
+          type: integer
+          description: UNIX-Timestamp des Erstelldatums
+        ts_update:
+          type: integer
+          description: UNIX-Timestamp zuletzt bearbeitet
+
+
+  securitySchemes:
+    Personal-API-Accesskey:
+      type: apiKey
+      name: accesskey
+      in: query

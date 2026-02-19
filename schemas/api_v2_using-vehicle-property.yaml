@@ -1,0 +1,88 @@
+openapi: 3.0.1
+info:
+  title: DIVERA 24/7 RESTful Webservice für Fahrzeug-Eigenschafen
+  description: "Die API von DIVERA 24/7 bietet zahlreiche Möglichkeiten, um eigene Dienste anzubinden und Aktionen auszulösen."
+  version: 4.1.0
+servers:
+  - url: https://app.divera247.com
+tags:
+  - name: Fahrzeug-Eigenschaften
+    description: Koordinaten und Eigenschaften von Fahrzeugen editieren
+paths:
+  /api/v2/using-vehicle-property/get/{id}:
+    get:
+      tags:
+        - Fahrzeug-Eigenschaften
+      summary: Die aktuellen Werte aller Eigenschaften eines Fahrzeugs abfragen
+      parameters:
+        - name: id
+          in: path
+          description: ID des Fahrzeugs
+          schema:
+            type: integer
+          required: true
+      responses:
+        200:
+          description: successful
+          content: {}
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+      security:
+        - System-API-Accesskey: []
+  /api/v2/using-vehicle-property/set/{id}:
+    post:
+      tags:
+        - Fahrzeug-Eigenschaften
+      summary: Werte setzen
+      parameters:
+        - name: id
+          in: path
+          description: ID des Fahrzeugs
+          schema:
+            type: integer
+          required: true
+      requestBody:
+        description: Parameter, die beim Setzen einer Eigenschaft mitgegeben werden
+          können
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                LATLNG:
+                  type: array
+                  items:
+                    type: number
+                  example: [51.216736,7.442374]
+                  description: LATLNG ist der einzige feste Parameter, Längen- und Breitengrad als Array (Index 0 = Längengrad, Index 1 = Breitengrad)
+              additionalProperties:
+                oneOf:
+                  - type: string
+                  - type: boolean
+                  - type: integer
+                  - type: number
+                description: Die übrigen Eigenschaften verwalten Sie unter Verwaltung > Einstellungen > Setup > Fahrzeuge. Für jede Eigenschaft bestimmten Sie einen eindeutigen Key, über den die Werte verknüpft werden.
+            example:
+              BAT: 1.343453443
+              NAVI: 1
+              ZÜND: 0
+              FUNK: 1
+              LATLNG: [51.216736, 7.442374]
+        required: true
+      responses:
+        200:
+          description: successful
+          content: {}
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+      security:
+        - System-API-Accesskey: []
+
+components:
+  securitySchemes:
+    System-API-Accesskey:
+      type: apiKey
+      name: accesskey
+      in: query

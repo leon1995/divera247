@@ -1,0 +1,38 @@
+openapi: 3.0.1
+info:
+  title: DIVERA 24/7 RESTful Webservice
+  description: "Die API von DIVERA 24/7 bietet zahlreiche Möglichkeiten, um eigene Dienste anzubinden und Aktionen auszulösen. Für Testzwecke empfehlen wir Ihnen, eine separate Einheit anzulegen. Testeinheiten von zahlenden Kunden werden auf Nachfrage kostenfrei hochgestuft.
+    \n\nBeachten Sie als Nutzer der kostenlosen Version: Innerhalb von fünf Minuten kann nur eine Alarmierung ausgelöst werden.
+    Gespeichert wird nur das Einsatz-Stichwort.
+    Sie können die ALARM-Version mit unbegrenzter Schnittstelle unverbindlich 30 Tage lang testen.
+    Den Test beantragen Sie nach dem Login im Browser unter Verwaltung > Konto > Kontakt- und Vertragsdaten."
+  version: 4.1.0
+servers:
+  - url: https://app.divera247.com
+tags:
+  - name: Download
+    description: Datei herunterladen
+paths:
+  /api/v2/file/open/{id}:
+    get:
+      tags:
+        - Download
+      summary: Binary der Datei
+      parameters:
+        - name: id
+          in: path
+          description: ID der Datei
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Der Inhalt ist in der Regel verschlüsselt.
+      security:
+        - Personal-API-Accesskey: []
+components:
+  securitySchemes:
+    Personal-API-Accesskey:
+      type: apiKey
+      name: accesskey
+      in: query

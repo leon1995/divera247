@@ -1,4 +1,4 @@
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from types import TracebackType
 from typing import Any, Self
 
@@ -35,12 +35,17 @@ class Divera247Client:
         response.raise_for_status()
         return response
 
-    async def post(self, path: str, data: Mapping[str, Any] | None = None) -> httpx.Response:
+    async def post(
+        self,
+        path: str,
+        data: Mapping[str, Any] | Sequence[object] | None = None,
+        params: QueryParamTypes | None = None,
+    ) -> httpx.Response:
         """Create a resource."""
         response = await self._session.post(
             f'{self.base_url}{path}',
             json=data,
-            params=self._merge_params(),
+            params=self._merge_params(params),
         )
         response.raise_for_status()
         return response
@@ -62,14 +67,41 @@ class Divera247Client:
         response.raise_for_status()
         return response
 
-    async def put(self, path: str, data: Mapping[str, Any] | None = None) -> httpx.Response:
+    async def put(
+        self,
+        path: str,
+        data: Mapping[str, Any] | Sequence[object] | None = None,
+        params: QueryParamTypes | None = None,
+    ) -> httpx.Response:
         """Update a resource."""
-        response = await self._session.put(f'{self.base_url}{path}', json=data, params=self._merge_params())
+        response = await self._session.put(
+            f'{self.base_url}{path}',
+            json=data,
+            params=self._merge_params(params),
+        )
         response.raise_for_status()
         return response
 
-    async def delete(self, path: str, params: QueryParamTypes | None = None) -> httpx.Response:
-        """Delete a resource."""
-        response = await self._session.delete(f'{self.base_url}{path}', params=self._merge_params(params))
+    async def delete(
+        self,
+        path: str,
+        params: QueryParamTypes | None = None,
+        *,
+        json: Mapping[str, object] | Sequence[object] | None = None,
+    ) -> httpx.Response:
+        """Delete a resource. Pass json= for request body (e.g. operation RIC delete)."""
+        url = f'{self.base_url}{path}'
+        if json is not None:
+            response = await self._session.request(
+                'DELETE',
+                url,
+                params=self._merge_params(params),
+                json=json,
+            )
+        else:
+            response = await self._session.delete(
+                url,
+                params=self._merge_params(params),
+            )
         response.raise_for_status()
         return response

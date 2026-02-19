@@ -1,0 +1,824 @@
+openapi: 3.0.1
+info:
+  title: DIVERA 24/7 RESTful Webservice für Mitteilungen
+  description: "Die API von DIVERA 24/7 bietet zahlreiche Möglichkeiten, um eigene Dienste anzubinden und Aktionen auszulösen. Für Testzwecke empfehlen wir Ihnen, eine separate Einheit anzulegen. Testeinheiten von zahlenden Kunden werden auf Nachfrage kostenfrei hochgestuft.
+    \n\nBeachten Sie als Nutzer der kostenlosen Version: Innerhalb von fünf Minuten kann nur eine Mitteilung ausgelöst werden.
+    Gespeichert wird nur das Mitteilung-Stichwort.
+    Sie können die ALARM-Version mit unbegrenzter Schnittstelle unverbindlich 30 Tage lang testen.
+    Den Test beantragen Sie nach dem Login im Browser unter Verwaltung > Konto > Kontakt- und Vertragsdaten."
+  version: 4.1.0
+servers:
+  - url: https://app.divera247.com
+tags:
+  - name: CRUD
+    description: Die wichtigsten Methoden zum Erstellen, Bearbeiten, Archivieren und Löschen von Mitteilungen
+  - name: Weitere
+    description: Zusätzliche Methoden um auf Mitteilungen zu reagieren
+paths:
+  /api/v2/news:
+    get:
+      tags:
+        - CRUD
+      summary: Methode zum Abrufen aller nicht archivierten Mitteilungen
+      responses:
+        200:
+          description: successful
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      items:
+                        type: object
+                        description: Liste der einzelnen Mitteilungen nach ID
+                        additionalProperties:
+                          $ref: '#/components/schemas/news-result'
+                      sorting:
+                        type: array
+                        description: Reihenfolge der Mitteilungen, absteigend
+                        items:
+                          type: integer
+                  ucr:
+                    type: integer
+                    description: ID der UserClusterRelation im aktuellen Request
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+        404:
+          description: Objekt nicht gefunden oder Zugriff nicht gestattet
+          content: {}
+      security:
+        - Personal-API-Accesskey: []
+    post:
+      tags:
+        - CRUD
+      summary: Methode zum Erstellen einer neuen Mitteilung
+      requestBody:
+        description: Parameter im JSON-Format
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/news-input'
+      responses:
+        200:
+          description: successful
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/news-result'
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+        404:
+          description: Objekt nicht gefunden oder Zugriff nicht gestattet
+          content: {}
+      security:
+        - Personal-API-Accesskey: []
+  /api/v2/news/{id}:
+    get:
+      tags:
+        - CRUD
+      summary: Methode zum Anzeigen einer Mitteilung
+      parameters:
+        - name: id
+          in: path
+          description: ID der Mitteilung
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: successful
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/news-result'
+                  ucr:
+                    type: integer
+                    description: ID der UserClusterRelation im aktuellen Request
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+        404:
+          description: Objekt nicht gefunden oder Zugriff nicht gestattet
+          content: {}
+      security:
+        - Personal-API-Accesskey: []
+    put:
+      tags:
+        - CRUD
+      summary: Methode zum Bearbeiten der Mitteilung
+      parameters:
+        - name: id
+          in: path
+          description: ID der Mitteilung
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        description: Parameter im JSON-Format
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/news-input'
+        required: true
+      responses:
+        200:
+          description: successful
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/news-result'
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+        404:
+          description: Objekt nicht gefunden oder Zugriff nicht gestattet
+          content: {}
+      security:
+        - Personal-API-Accesskey: []
+    delete:
+      tags:
+        - CRUD
+      summary: Methode zum Löschen der Mitteilung
+      parameters:
+        - name: id
+          in: path
+          description: ID der Mitteilung
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: successful
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/success'
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+        404:
+          description: Objekt nicht gefunden oder Zugriff nicht gestattet
+          content: {}
+      security:
+        - Personal-API-Accesskey: []
+  /api/v2/news/attachment/{id}:
+    post:
+      tags:
+        - CRUD
+      summary: Methode zum Hinzufügen eines Anhangs
+      parameters:
+        - name: id
+          in: path
+          description: ID der Nachricht
+          required: true
+          schema: {}
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - Attachment[upload]
+                - Attachment[title]
+                - Attachment[description]
+              properties:
+                Attachment[upload]:
+                  description: Der Anhang als binary-string
+                  type: string
+                Attachment[title]:
+                  description: Titel des Anhangs
+                  type: string
+                Attachment[description]:
+                  description: Beschreibung des Anhangs
+                  type: string
+      responses:
+        200:
+          description: successful
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/success'
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+        404:
+          description: Objekt nicht gefunden oder Zugriff nicht gestattet
+          content: {}
+      security:
+        - Personal-API-Accesskey: []
+  /api/v2/news/archive/{id}:
+    post:
+      tags:
+        - CRUD
+      summary: Methode zum Archivieren der Mitteilung
+      parameters:
+        - name: id
+          in: path
+          description: ID der Mitteilung
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: successful
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/success'
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+        404:
+          description: Objekt nicht gefunden oder Zugriff nicht gestattet
+          content: {}
+      security:
+        - Personal-API-Accesskey: []
+  /api/v2/news/confirm/{id}:
+    post:
+      tags:
+        - Weitere
+      summary: Methode zum Erstellen einer Rückmeldung
+      parameters:
+        - name: id
+          in: path
+          description: ID der Mitteilung
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        description: Parameter im JSON-Format
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                NewsSurvey:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      description: ID der Umfrage
+                    note:
+                      type: string
+                      description: Freitext-Rückmeldung
+                NewsSurveyAnswer:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      description: ID der Antwort
+                    checked:
+                      type: boolean
+                      description: Antwort ausgewählt/nicht ausgewählt
+                    custom_answer:
+                      type: boolean
+                      description: Freitext (in diesem Fall id = 0)
+      responses:
+        200:
+          description: successful
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/success'
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+        404:
+          description: Objekt nicht gefunden oder Zugriff nicht gestattet
+          content: {}
+      security:
+        - Personal-API-Accesskey: []
+  /api/v2/news/read/{id}:
+    post:
+      tags:
+        - Weitere
+      summary: Methode um die Mitteilung als gelesen zu markieren
+      parameters:
+        - name: id
+          in: path
+          description: ID der Mitteilung
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: successful
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/success'
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+        404:
+          description: Objekt nicht gefunden oder Zugriff nicht gestattet
+          content: {}
+      security:
+        - Personal-API-Accesskey: []
+  /api/v2/news/reach/{id}:
+    get:
+      tags:
+        - Weitere
+      summary: Methode um die Reichweite (emfangen, gelesen, beantwortet) abzurufen
+      parameters:
+        - name: id
+          in: path
+          description: ID der Mitteilung
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: successful
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      transports:
+                        type: object
+                        description: Abgeschlossene Versand-Prozesse
+                      received:
+                        type: object
+                        description: Benachrichtigung erhalten (Push/Pager/SMS/Anruf)
+                      viewed:
+                        type: object
+                        description: Meldung gelesen
+                      confirmed:
+                        type: object
+                        description: Aktive Rückmeldung
+                  ucr:
+                    type: integer
+                    description: ID der UserClusterRelation im aktuellen Request
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+        404:
+          description: Objekt nicht gefunden oder Zugriff nicht gestattet
+          content: {}
+      security:
+        - Personal-API-Accesskey: []
+  /api/v2/news/download/{id}:
+    get:
+      tags:
+        - Weitere
+      summary: Methode zum Herunterladen der Mitteilung als PDF-Datei
+      parameters:
+        - name: id
+          in: path
+          description: ID der Mitteilung
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: successful
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/success'
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+        404:
+          description: Objekt nicht gefunden oder Zugriff nicht gestattet
+          content: {}
+      security:
+        - Personal-API-Accesskey: []
+  /api/v2/news/reset-responses/{id}:
+    delete:
+      tags:
+        - Weitere
+      summary: Methode zum Rücksetzen aller Rückmeldungen der enthaltenen Umfrage(n)
+      parameters:
+        - name: id
+          in: path
+          description: ID der Mitteilung
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: successful
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/success'
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+        404:
+          description: Objekt nicht gefunden oder Zugriff nicht gestattet
+          content: {}
+      security:
+        - Personal-API-Accesskey: []
+
+components:
+  schemas:
+
+    success:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: TRUE
+        data:
+          type: object
+        ucr:
+          type: integer
+          description: ID der UserClusterRelation im aktuellen Request
+
+    news-input:
+      type: object
+      properties:
+        News:
+          type: object
+          required:
+            - title
+            - notification_type
+          properties:
+            foreign_id:
+              type: string
+              example: 2019-1023
+              description: Fremdschlüssel
+            title:
+              type: string
+              example: Neue Dienstanweisung
+              description: Titel
+            text:
+              type: string
+              example: Rückwärtsfahren nur mit Einweiser
+              description: Meldung
+            address:
+              type: string
+              example: Raum 1.23
+              description: Ort
+            survey:
+              type: boolean
+              description: Umfrage hinzufügen, Parameter siehe NewsSurvey
+            private_mode:
+              type: boolean
+              description: Sichtbarkeit privat
+            notification_type:
+              type: number
+              description: Empfänger-Auswahl (1 = Ausgewählte Standorte (nur in der PRO-Version), 2 = Alle des Standortes, 3 = Ausgewählte Gruppen, 4 = Ausgewählte Benutzer)
+            send_push:
+              type: boolean
+              description: Push-Nachricht an die App senden (der Wert wird nach dem Versand auf FALSE zurückgesetzt)
+            send_sms:
+              type: boolean
+              description: SMS senden (der Wert wird nach dem Versand auf FALSE zurückgesetzt, kostenpflichtig)
+            send_call:
+              type: boolean
+              description: Sprachanruf senden (der Wert wird nach dem Versand auf FALSE zurückgesetzt, kostenpflichtig)
+            send_mail:
+              type: boolean
+              description: E-Mail senden (der Wert wird nach dem Versand auf FALSE zurückgesetzt, Adresse muss zuvor durch den Benutzer bestätigt werden)
+            send_pager:
+              type: boolean
+              description: An verknüpfte Pager senden (der Wert wird nach dem Versand auf FALSE zurückgesetzt, je nach Setup e*Message-/UNITRONIC-/TETRA-Pager)
+            ts_publish:
+              type: number
+              description: Mitteilung zeitgesteuert veröffentlichen nach UNIX-Timestamp, bei leerem Wert sofort
+            archive:
+              type: boolean
+              description: Mitteilung zeitgesteuert archivieren
+            ts_archive:
+              type: number
+              description: Mitteilung zeitgesteuert archivieren nach UNIX-Timestamp, bei leerem Wert keine automatische Archivierung
+            cluster:
+              type: object
+              description: IDs der Standorte mit Empfänger-Auswahl (nur für einheitsübergreifende Alarmierungen in der PRO-Version, bedingt 'notification_type' = 1)
+              example:
+                '123':
+                  notification_type: 2
+                '456':
+                  notification_type: 3
+                '789':
+                  notification_type: 4
+              items:
+                type: object
+                description: ID der Untereinheit der Index, als Wert im Objekt den Typ der Empfänger-Auswahl innerhalb der Untereinheit, die IDs der Gruppen und Benutzer in den übergeordneten Arrays 'usingGroups' und 'usingUserClusterRelations' übermitteln)
+                properties:
+                  notification_type:
+                    type: integer
+            group:
+              type: array
+              description: IDs der Gruppen (bedingt 'notification_type' = 1 oder 3). Statt der IDs kann über die Angabe in `instructions.group` auch der Name der Gruppe übergeben werden.
+              example: [1,2,3,4]
+              items:
+                type: integer
+            user_cluster_relation:
+              type: array
+              description: IDs der Benutzer (bedingt 'notification_type' = 1 oder 4). Statt der IDs kann über die Angabe in `instructions.user_cluster_relation` auch der eingetragene Fremdschlüssel des Nutzers oder Status-IDs übergeben werden.
+              example: [1,2,3,4]
+              items:
+                type: integer
+        instructions:
+          type: object
+          properties:
+            cluster:
+              type: object
+              properties:
+                mapping:
+                  type: string
+                  example: id
+                  description: "Mögliche Werte: id (Primärschlüssel), title (Bezeichnung)"
+            group:
+              type: object
+              properties:
+                mapping:
+                  type: string
+                  example: id
+                  description: "Mögliche Werte: id (Primärschlüssel), title (Bezeichnung)"
+            user_cluster_relation:
+              type: object
+              properties:
+                mapping:
+                  type: string
+                  example: id
+                  description: "Mögliche Werte: id (Primärschlüssel), foreign_id (Fremdschlüssel), status_id (Aktuelle ID des Status)"
+
+        NewsSurvey:
+          type: object
+          properties:
+            title:
+              type: string
+              example: Mit wie vielen Personen nehmt ihr am Sommerfest teil?
+              description: Titel/Frage
+            show_result_count:
+              type: integer
+              description: Sichtbarkeit der anonymen Rückmeldungen (0 = Nur für Autor, 1 = Für alle mit Schreibrecht, 2 = Sichtbar für alle)
+            show_result_names:
+              type: integer
+              description: Sichtbarkeit der Rückmeldungen mit Name und Freitext-Antwort (0 = Nur für Autor, 1 = Für alle mit Schreibrecht, 2 = Sichtbar für alle)
+            multiple_answers:
+              type: boolean
+              example: TRUE
+              description: Mehrere Antworten zulassen
+            custom_answers:
+              type: boolean
+              example: TRUE
+              description: Freitext-Antwort zulassen
+            response_until:
+              type: boolean
+              example: TRUE
+              description: Rückmeldung zeitlich begrenzen
+            ts_response:
+              type: integer
+              description: Rückmeldung endet als UNIX-Timestamp
+            answers:
+              type: array
+              description: Strings der einzelnen Antwort-Optionen als Array
+              items:
+                type: string
+            sorting:
+              type: array
+              description: Reihenfolge der einzelnen Antwort-Optionen als Array der Antwort-IDs
+              items:
+                anyOf:
+                - type: string
+                - type: integer
+            uploads:
+              type: string
+              description: Anhänge uploaden als Binary
+              example: Binary
+
+    news-result:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 123
+          description: ID/Primärschlüssel
+        foreign_id:
+          type: string
+          example: 2019-1023
+          description: Fremdschlüssel
+        author_id:
+          type: integer
+          example: 123456789
+          description: ID des Nutzers (UserClusterRelation)
+        date:
+          type: integer
+          description: Mitteilungszeit als UNIX-Timestamp
+        title:
+          type: string
+          example: Neue Dienstanweisung
+          description: Titel
+        text:
+          type: string
+          example: Rückwärtsfahren nur mit Einweiser
+          description: Meldung
+        address:
+          type: string
+          example: Raum 1.23
+          description: Ort
+        cluster:
+          type: array
+          items:
+            type: integer
+          description: IDs der Standorte (bedingt 'notification_type' = 1)
+        group:
+          type: array
+          items:
+            type: integer
+          description: IDs der Gruppen (bedingt 'notification_type' = 1 oder 3)
+        user_cluster_relation:
+          type: array
+          items:
+            type: integer
+          description: IDs der Benutzer (bedingt 'notification_type' = 1 oder 4)
+        private_mode:
+          type: boolean
+          description: Sichtbarkeit privat
+        notification_type:
+          type: integer
+          description: Empfänger-Auswahl (1 = Ausgewählte Standorte, 2 = Alle des Standortes, 3 = Ausgewählte Gruppen, 4 = Ausgewählte Benutzer)
+        send_push:
+          type: boolean
+          description: Push-Nachricht an die App senden (der Wert wird nach dem Versand auf FALSE zurückgesetzt)
+        send_sms:
+          type: boolean
+          description: SMS senden (der Wert wird nach dem Versand auf FALSE zurückgesetzt, kostenpflichtig)
+        send_call:
+          type: boolean
+          description: Sprachanruf senden (der Wert wird nach dem Versand auf FALSE zurückgesetzt, kostenpflichtig)
+        send_mail:
+          type: boolean
+          description: E-Mail senden (der Wert wird nach dem Versand auf FALSE zurückgesetzt, Adresse muss zuvor durch den Benutzer bestätigt werden)
+        send_pager:
+          type: boolean
+          description: An verknüpfte Pager senden (der Wert wird nach dem Versand auf FALSE zurückgesetzt, je nach Setup e*Message-/UNITRONIC-/TETRA-Pager)
+        survey:
+          type: boolean
+          description: Umfrage aktiv, Eigenschaften siehe NewsSurvey
+        surveys:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                description: ID der Umfrage
+              title:
+                type: string
+                example: Mit wie vielen Personen nehmt ihr am Sommerfest teil?
+                description: Titel/Frage
+              show_result_count:
+                type: integer
+                description: Sichtbarkeit der anonymen Rückmeldungen (0 = Nur für Autor, 1 = Für alle mit Schreibrecht, 2 = Sichtbar für alle)
+              show_result_names:
+                type: integer
+                description: Sichtbarkeit der Rückmeldungen mit Name und Freitext-Antwort (0 = Nur für Autor, 1 = Für alle mit Schreibrecht, 2 = Sichtbar für alle)
+              access_count:
+                type: boolean
+                example: TRUE
+                description: Nutzer darf auf anonyme Rückmeldungen zugreifen
+              access_names:
+                type: boolean
+                example: TRUE
+                description: Nutzer darf auf Rückmeldungen mit Name und Freitext-Antwort zugreifen
+              multiple_answers:
+                type: boolean
+                example: TRUE
+                description: Mehrere Antworten zulassen
+              custom_answers:
+                type: boolean
+                example: TRUE
+                description: Freitext-Antwort zulassen
+              response_until:
+                type: boolean
+                example: TRUE
+                description: Rückmeldung zeitlich begrenzen
+              ts_response:
+                type: integer
+                description: Rückmeldung endet als UNIX-Timestamp
+              answers:
+                type: array
+                description: Antwort-Optionen
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      description: ID der Antwort
+                    title:
+                      type: string
+                      example: ja
+                      description: Beschreibung der Antwort
+                    note:
+                      type: string
+                      example: weiß noch nicht
+                      description: Freitext-Antwort
+                    answeredcount:
+                      type: integer
+                    answeredlist:
+                      type: array
+                      items:
+                        type: integer
+                    custom_answers:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                            description: ID der UserClusterRelation
+                          ts:
+                            type: integer
+                            description: UNIX-Timestamp
+                          note:
+                            type: string
+                            description: Freitext-Antwort
+              answerSorting:
+                type: array
+                description: Reihenfolge der einzelnen Antwort-Optionen als Array der Antwort-IDs
+                items:
+                  anyOf:
+                    - type: string
+                    - type: integer
+
+        new:
+          type: boolean
+          description: Neu/Umngelesen
+        editable:
+          type: boolean
+          description: Bearbeitbar
+        answerable:
+          type: boolean
+          description: Beantwortbar
+        hidden:
+          type: boolean
+          description: Entwurf
+        deleted:
+          type: boolean
+          description: Im Archiv, nur noch für Schreibberechtigte zugänglich
+        ucr_adressed:
+          type: array
+          items:
+            type: integer
+          description: Adressierte Benutzer
+        ucr_answered:
+          type: array
+          items:
+            type: integer
+          description: Rückmeldungen der Benutzer
+        ucr_self_addressed:
+          type: boolean
+          description: Selbst adressiert, Rückmeldung ist möglich
+        count_recipients:
+          type: integer
+          description: Anzahl der Empfänger
+        count_read:
+          type: integer
+          description: Anzahl gelesen
+        ts_publish:
+          type: number
+          description: Mitteilung zeitgesteuert veröffentlichen nach UNIX-Timestamp, bei leerem Wert sofort
+        archive:
+          type: boolean
+          description: Mitteilung zeitgesteuert archivieren
+        ts_archive:
+          type: number
+          description: Mitteilung zeitgesteuert archivieren nach UNIX-Timestamp, bei leerem Wert keine automatische Archivierung
+        ts_create:
+          type: integer
+          description: UNIX-Timestamp des Erstelldatums
+        ts_update:
+          type: integer
+          description: UNIX-Timestamp zuletzt bearbeitet
+
+  securitySchemes:
+    Personal-API-Accesskey:
+      type: apiKey
+      name: accesskey
+      in: query

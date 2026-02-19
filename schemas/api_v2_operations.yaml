@@ -1,0 +1,1873 @@
+openapi: 3.0.1
+info:
+  title: DIVERA 24/7 RESTful Webservice für Leitstellen
+  description: |
+    Schnittstelle um Leitstellensysteme direkt an DIVERA 24/7 anzubinden. So können Einsätze ohne Umwege über die API der Zusatzalarmierung in Sekunden sicher übertragen werden.
+    ### Sie wollen ein Leitsystem an DIVERA 24/7 anbinden?
+    Dann kontaktieren Sie uns über support@divera247.com oder unser [Support-Portal](https://support.divera247.com)
+    ## Voraussetzung zur Verwendung der Operations-API
+    1. <b>Leitstellen-Account</b><br>
+    Übliche DIVERA-Einheiten haben keinen Zugriff auf die Operations-API, können jedoch Alarmierungen über die [vereinfachte API /api/alarm](?urls.primaryName=api) erzeugen. Leitstellen-Accounts unterstützen zusätzlich die hier beschriebene Operations-API.
+    2. <b>RICs zuordnen</b><br>
+    Für die Verwendung der Operations-API wird ein API AccessKey benötigt. Dieser ist in den [API Einstellungen des Leitstellenaccounts](https://app.divera247.com/controlcenter/index-account.html?tab=api) zu finden.
+    ## Verwendung der API
+    ### Hinweis zur `foreign_id`<br>
+    In den unten beschriebenen Schnittstellen dient die `foreign_id` innerhalb eines Leitstellen-Accounts als eindeutige Einsatzkennung. Sie muss beim ersten Aufruf (durch das Einsatzleitsystem) vergeben werden und bei jedem folgenden zu diesem Einsatz wieder übertragen werden. Hierdurch wird sichergestellt, dass API-Aufrufe dem richtigen Einsatz zugeordnet werden können. Diese Id ist üblicherweise eine eindeutige Id innerhalb des Einsatzleitsystems und getrennt von der dem Nutzer angezeigten Einsatznummer zu sehen. Sie kann einer beliebigen, zufälligen, nutzerspezifischen Zahlen- und Zeichenkette entspringen.
+    ### Schematischer Ablauf der API-Aufrufe<br>
+    1. <b>Einsatzdaten übertragen</b><br>
+    Zum Anlegen eines Einsatzes wird zunächst die API [/api/v2/operations](/?urls.primaryName=api%2Fv2%2Foperations#/Einsatzdaten/post_api_v2_operations) per <i>POST</i>-Request aufgerufen.
+    <br><div style="background: #fca130;border-color: #fca130;border-radius: 4px;box-shadow: 0 0 3px rgba(0,0,0,.19);margin: 0 0 15px;"><div style="align-items: center;display: flex;padding: 5px;"><b>Hinweis</b><div style="padding: 0 10px;">Im ersten Schritt werden nur Einsatzdaten übertragen, eine Alarmierung von Einsatzkräften erfolgt erst durch Schritt 3!</div></div></div>
+    2. <b>RICs zuordnen</b><br>
+    Die RIC Zuordnung erfolgt über die API [/api/v2/operations/ric](/?urls.primaryName=api%2Fv2%2Foperations#/Einsatzmittelzuordnung/post_api_v2_operations_ric) per <i>POST</i>-Request. RICs die im späteren Verlauf eine Alarmierung erhalten sollen müssen hier zunächst dem Einsatz hinzugefügt werden.
+    <br><div style="background: #fca130;border-color: #fca130;border-radius: 4px;box-shadow: 0 0 3px rgba(0,0,0,.19);margin: 0 0 15px;"><div style="align-items: center;display: flex;padding: 5px;"><b>Hinweis</b><div style="padding: 0 10px;">RICs können als Bezeichner gesehen werden und können beliebige Schemata enthalten (bspw. Namen von Maßnahmen, Fahrzeugen oder Alarmierungsschleifen)</div></div></div>
+    3. <b>Alarmierung auslösen</b><br>
+    Die Einsatz-Alarmierung erfolgt über die API [/api/v2/operations/alert](/?urls.primaryName=api%2Fv2%2Foperations#/Einsatzdaten/post_api_v2_operations_alert) per <i>POST</i>-Request. Standardmäßig werden alle zuvor dem Einsatz zugeordneten RICs alarmiert. Sollten in Außnamefällen nur einzelne RICs alarmiert werden, können diese als Liste übertragen werden.  <div style="background: #fca130;border-color: #fca130;border-radius: 4px;box-shadow: 0 0 3px rgba(0,0,0,.19);margin: 0 0 15px;"><div style="align-items: center;display: flex;padding: 5px;"><b>Hinweis</b><div style="padding: 0 10px;">Bei mehrfachen Aufrufen dieser API werden bereits alarmierte RICs nicht erneut alarmiert.</div></div></div>
+    4. <b>(Optional) Einsatzdaten aktualisieren, weitere RICs zuordnen und alarmieren</b><br>
+    Die Schritte 1-3 können beliebig wiederholt werden. Ein Update der Einsatzdaten auf Grundlage der `foreign_id` erfolgt wie in 1 beschrieben. RICs können mit Schritt 2 hinzugefügt und Schritt 3 nachalarmiert werden.<br><div style="margin: 0 0 15px;"></div>
+    5. <b>(Optional) Ergebnisse und Verfügbarkeiten abfragen</b><br>
+    Die im Abschnitt <i>Datenrückführung</i> beschriebenen Endpunkte können verwendet werden, um durch DIVERA bereitgestellte Rückmeldungen und Verfügbarkeiten wieder in das Einsatzleitsystem zu überführen. Eine Abfrage macht hier 30 Sekunden, 1 Minute, 3 und 5 Minuten nach Alarmierung Sinn.
+  version: 4.1.0
+servers:
+  - url: https://app.divera247.com
+tags:
+  - name: Einsatzdaten
+    description: Anlegen und Ändern von Einsätzen, Auslösen der Alarmierung.
+  - name: Dateianhänge
+    description: Verwalten von Dateianhängen von Alarmierungen
+  - name: Einsatzmittelzuordnung
+    description: Zuordnen und Entfernen von Einsatzmitteln
+  - name: Datenrückführung
+    description: Ergebnisse und Verfügbarkeiten von alarmierten Einheiten
+
+
+paths:
+  /api/v2/operations?foreign_id={foreign_id}:
+    get:
+      tags:
+        - Einsatzdaten
+      summary: Einsatzdatensatz abfragen
+      description: Aktuell im System hinterlegte Einsatzdaten abfragen. Über den Parameter `foreign_id` kann ein gezielter Einsatz abgefragt werden. Eine Abfrage von Einsatzdaten ist für eine Schnittstelle nicht erforderlich, da Daten automatisch zusammengeführt werden. **Dieser Endpunkt sollte nur zu Entwicklungszwecken verwendet werden.**
+      parameters:
+        - name: foreign_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/foreignId'
+      responses:
+        200:
+          description: Einsatz wurde erfolgreich erzeugt/aktualisiert. Die Antwort enthält den vollständigen Einsatz nach Aktualisierung
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/operation-response'
+        403:
+          description: Accesskey fehlt oder ist ungültig
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/response-forbidden'
+        404:
+          description: Ein Einsatz mit der angegebenen `foreign_id` existiert nicht.
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/response-not-found'
+      security:
+        - Accesskey: []
+  /api/v2/operations:
+    get:
+      tags:
+        - Einsatzdaten
+      summary: Laufende Einsätze abfragen
+      description: Alle aktuell im System hinterlegten Einsatzdaten abfragen. Eine Abfrage von Einsatzdaten ist für eine Schnittstelle nicht erforderlich, da Daten automatisch zusammengeführt werden. **Dieser Endpunkt sollte nur zu Entwicklungszwecken verwendet werden.**
+      responses:
+        200:
+          description: Einsatz wurde erfolgreich erzeugt/aktualisiert. Die Antwort enthält den vollständigen Einsatz nach Aktualisierung
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/operation-response'
+        403:
+          description: Accesskey fehlt oder ist ungültig
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/response-forbidden'
+        404:
+          description: Ein Einsatz mit der angegebenen `foreign_id` existiert nicht.
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/response-not-found'
+      security:
+        - Accesskey: []
+    post:
+      tags:
+        - Einsatzdaten
+      summary: Einsatz anlegen oder aktualisieren
+      description: Aktuelle Einsatzdaten im System hinterlegen. Bei Angabe der selben `foreign_id`, werden Einsätze automatisch aktualisiert. Dabei überschreiben alle übertragenen Felder die alten Daten.<br><br>Das Erzeugen eines Einsatzes löst keine Alarmierung aus. Typischerweise wird nach jeder Änderung des Disponenten (Stichwort, Freitext, Ort, Adresse, usw.) der API Endpunkt mit genau den gesetzten/geänderten Feldern aufgerufen.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/operation'
+      responses:
+        200:
+          description: Einsatz wurde erfolgreich erzeugt/aktualisiert. Die Antwort enthält den vollständigen Einsatz nach Aktualisierung
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/operation-response'
+        403:
+          description: Accesskey fehlt oder ist ungültig
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/response-forbidden'
+      security:
+        - Accesskey: []
+
+  /api/v2/operations/attachments?foreign_id={foreign_id}:
+    get:
+      tags:
+        - Dateianhänge
+      summary: Alle angehängten Dateien zu Einsatz abrufen
+      description: Aktuelle Dateien zu einem Einsatz im System abrufen.
+      parameters:
+        - name: foreign_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/foreignId'
+      responses:
+        200:
+          description: Die Antwort enthält eine Liste der Dateien zu diesem Einsatz.
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/operation-file-response'
+        403:
+          description: Accesskey fehlt oder ist ungültig
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/response-forbidden'
+      security:
+        - Accesskey: []
+    post:
+      tags:
+        - Dateianhänge
+      summary: Datei zu Einsatz hinzufügen
+      description: Eine Datei wird zu einem Einsatz im System hinterlegt. Das erstellte Dateiobjekt wird im Anschluss zurückgegeben.
+      parameters:
+        - name: foreign_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/foreignId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/operation-file'
+      responses:
+        200:
+          description: Die Antwort enthält die neu hinzugefügte Datei zu diesem Einsatz.
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/operation-file-response'
+        403:
+          description: Accesskey fehlt oder ist ungültig
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/response-forbidden'
+    put:
+      tags:
+        - Dateianhänge
+      summary: Angehängte Dateien ersetzen
+      description: Aktuelle Dateien zu einem Einsatz im System ersetzen.
+      parameters:
+        - name: foreign_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/foreignId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/operation-file'
+      responses:
+        200:
+          description: Die Antwort enthält eine Liste der Dateien zu diesem Einsatz.
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/operation-file-response'
+        403:
+          description: Accesskey fehlt oder ist ungültig
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/response-forbidden'
+      security:
+        - Accesskey: []
+
+  /api/v2/operations/{id}/attachments:
+    get:
+      tags:
+        - Dateianhänge
+      summary: Alle angehängten Dateien zu Einsatz abrufen
+      description: Aktuelle Dateien zu einem Einsatz im System abrufen.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/foreignId'
+      responses:
+        200:
+          description: Die Antwort enthält eine Liste der Dateien zu diesem Einsatz.
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/operation-file-response'
+        403:
+          description: Accesskey fehlt oder ist ungültig
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/response-forbidden'
+      security:
+        - Accesskey: []
+    post:
+      tags:
+        - Dateianhänge
+      summary: Datei zu Einsatz hinzufügen
+      description: Eine Datei wird zu einem Einsatz im System hinterlegt. Das erstellte Dateiobjekt wird im Anschluss zurückgegeben.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/foreignId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/operation-file'
+      responses:
+        200:
+          description: Die Antwort enthält die neu hinzugefügte Datei zu diesem Einsatz.
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/operation-file-response'
+        403:
+          description: Accesskey fehlt oder ist ungültig
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/response-forbidden'
+    put:
+      tags:
+        - Dateianhänge
+      summary: Angehängte Dateien ersetzen
+      description: Aktuelle Dateien zu einem Einsatz im System ersetzen.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/foreignId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/operation-file'
+      responses:
+        200:
+          description: Die Antwort enthält eine Liste der Dateien zu diesem Einsatz.
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/operation-file-response'
+        403:
+          description: Accesskey fehlt oder ist ungültig
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/response-forbidden'
+      security:
+        - Accesskey: []
+
+  /api/v2/operations/{id}/attachments/{attachmentId}:
+    get:
+      tags:
+        - Dateianhänge
+      summary: Datei zu Einsatz abrufen
+      description: Aktuelle Datei zu einem Einsatz im System abrufen.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/foreignId'
+        - name: attachmentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Die Antwort enthält die durch `attachmentId` zu diesem Einsatz zugeordnete Id.
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/operation-file-response'
+        403:
+          description: Accesskey fehlt oder ist ungültig
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/response-forbidden'
+      security:
+        - Accesskey: []
+    delete:
+      tags:
+        - Dateianhänge
+      summary: Datei von Einsatz entfernen
+      description: Aktuelle Datei zu einem Einsatz im System löschen.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/foreignId'
+        - name: attachmentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        201:
+          description: Das Löschen der Datei war erfolgreich.
+        403:
+          description: Accesskey fehlt oder ist ungültig
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/response-forbidden'
+      security:
+        - Accesskey: []
+
+  /api/v2/operations/ric?foreign_id={foreign_id}:
+    get:
+      tags:
+        - Einsatzmittelzuordnung
+      summary: Alle zugeordneten Einsatzmittel auflisten
+      description: Über die Angabe von `foreign_id`, wird der Einsatz identifiziert.
+      parameters:
+        - name: foreign_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/foreignId'
+      responses:
+        200:
+          description: Zugeordnete Einsatzmittel werden aufgelistet.
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/operation-ric-response-get'
+        403:
+          description: Accesskey fehlt oder ist ungültig
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/response-forbidden'
+        404:
+          description: Ein Einsatz mit der angegebenen `foreign_id` existiert nicht.
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/response-not-found'
+      security:
+        - Accesskey: []
+
+    post:
+      tags:
+        - Einsatzmittelzuordnung
+      summary: Einsatzmittel einem Einsatz hinzufügen
+      description: >
+        Einsatzmittel über ihre Kennung im Leitstellensystem einem Einsatz zuordnen. Über die Angabe von `foreign_id`, wird der Einsatz identifiziert.<br><br>Das Hinzufügen eines Einsatzmittels löst keine Alarmierung aus.<br><br><div style="background: #fca130;border-color: #fca130;border-radius: 4px;box-shadow: 0 0 3px rgba(0,0,0,.19);margin: 0 0 15px;"><div style="align-items: center;display: flex;padding: 5px;"><b>Hinweis</b><div style="padding: 0 10px;">Ist dem System eine RIC Kennung unbekannt, legt der Server die RIC automatisch neu an.</div></div></div>
+      parameters:
+        - name: foreign_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/foreignId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/operation-ric'
+      responses:
+        200:
+          description: Einsatzmittel wurden erfolgreich hinzugefügt oder waren (teilweise) bereits zugeordnet. Es werden alle zugeordneten Einsatzmittel aufgelistet (Primärschlüssel von DIVERA).
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/operation-ric-response'
+        403:
+          description: Accesskey fehlt oder ist ungültig
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/response-forbidden'
+        404:
+          description: Ein Einsatz mit der angegebenen `foreign_id` existiert nicht.
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/response-not-found'
+      security:
+        - Accesskey: []
+
+    put:
+      tags:
+        - Einsatzmittelzuordnung
+      summary: Zugeordnete Einsatzmittel vollständig ersetzen
+      description: Alle zuvor zugeordneten Einsatzmittel entfernen und über ihre Kennung im Leitstellensystem zu einem Einsatz neu zuordnen. Wenn für `ric_names` ein leeres Array übergeben wird, werden alle Einsatzmittel entfernt. Über die Angabe von `foreign_id`, wird der Einsatz identifiziert.
+      parameters:
+        - name: foreign_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/foreignId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/operation-ric'
+      responses:
+        200:
+          description: Einsatzmittel wurden erfolgreich entfernt und neu gesetzt. Es werden alle noch zugeordneten Einsatzmittel aufgelistet (Primärschlüssel von DIVERA).
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/operation-ric-put-response'
+        403:
+          description: Accesskey fehlt oder ist ungültig
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/response-forbidden'
+        404:
+          description: Ein Einsatz mit der angegebenen `foreign_id` existiert nicht.
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/response-not-found'
+      security:
+        - Accesskey: []
+
+    delete:
+      tags:
+        - Einsatzmittelzuordnung
+      summary: Einsatzmittel von einem Einsatz entfernen
+      description: Einsatzmittel über ihre Kennung im Leitstellensystem von einem Einsatz entfernen. Über die Angabe von `foreign_id`, wird der Einsatz identifiziert.
+      parameters:
+        - name: foreign_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/foreignId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/operation-ric'
+      responses:
+        200:
+          description: Einsatzmittel wurden erfolgreich entfernt oder waren zuvor nicht zugeordnet. Es werden alle noch zugeordneten Einsatzmittel aufgelistet (Primärschlüssel von DIVERA).
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/operation-ric-delete-response'
+        403:
+          description: Accesskey fehlt oder ist ungültig
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/response-forbidden'
+        404:
+          description: Ein Einsatz mit der angegebenen `foreign_id` existiert nicht.
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/response-not-found'
+      security:
+        - Accesskey: []
+
+  /api/v2/operations/{id}/ric:
+    get:
+      tags:
+        - Einsatzmittelzuordnung
+      summary: Alle zugeordneten Einsatzmittel auflisten
+      description: Über die Angabe von `id`, wird der Einsatz identifiziert.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/foreignId'
+      responses:
+        200:
+          description: Zugeordnete Einsatzmittel werden aufgelistet.
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/operation-ric-response-get'
+        403:
+          description: Accesskey fehlt oder ist ungültig
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/response-forbidden'
+        404:
+          description: Ein Einsatz mit der angegebenen `id` existiert nicht.
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/response-not-found'
+      security:
+        - Accesskey: []
+
+    post:
+      tags:
+        - Einsatzmittelzuordnung
+      summary: Einsatzmittel einem Einsatz hinzufügen
+      description: >
+        Einsatzmittel über ihre Kennung im Leitstellensystem einem Einsatz zuordnen. Über die Angabe von `id`, wird der Einsatz identifiziert.<br><br>Das Hinzufügen eines Einsatzmittels löst keine Alarmierung aus.<br><br><div style="background: #fca130;border-color: #fca130;border-radius: 4px;box-shadow: 0 0 3px rgba(0,0,0,.19);margin: 0 0 15px;"><div style="align-items: center;display: flex;padding: 5px;"><b>Hinweis</b><div style="padding: 0 10px;">Ist dem System eine RIC Kennung unbekannt, legt der Server die RIC automatisch neu an.</div></div></div>
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/foreignId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/operation-ric'
+      responses:
+        200:
+          description: Einsatzmittel wurden erfolgreich hinzugefügt oder waren (teilweise) bereits zugeordnet. Es werden alle zugeordneten Einsatzmittel aufgelistet (Primärschlüssel von DIVERA).
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/operation-ric-response'
+        403:
+          description: Accesskey fehlt oder ist ungültig
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/response-forbidden'
+        404:
+          description: Ein Einsatz mit der angegebenen `id` existiert nicht.
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/response-not-found'
+      security:
+        - Accesskey: []
+
+    put:
+      tags:
+        - Einsatzmittelzuordnung
+      summary: Zugeordnete Einsatzmittel vollständig ersetzen
+      description: Alle zuvor zugeordneten Einsatzmittel entfernen und über ihre Kennung im Leitstellensystem zu einem Einsatz neu zuordnen. Wenn für `ric_names` ein leeres Array übergeben wird, werden alle Einsatzmittel entfernt. Über die Angabe von `id`, wird der Einsatz identifiziert.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/foreignId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/operation-ric'
+      responses:
+        200:
+          description: Einsatzmittel wurden erfolgreich entfernt und neu gesetzt. Es werden alle noch zugeordneten Einsatzmittel aufgelistet (Primärschlüssel von DIVERA).
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/operation-ric-put-response'
+        403:
+          description: Accesskey fehlt oder ist ungültig
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/response-forbidden'
+        404:
+          description: Ein Einsatz mit der angegebenen `id` existiert nicht.
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/response-not-found'
+      security:
+        - Accesskey: []
+
+    delete:
+      tags:
+        - Einsatzmittelzuordnung
+      summary: Einsatzmittel von einem Einsatz entfernen
+      description: Einsatzmittel über ihre Kennung im Leitstellensystem von einem Einsatz entfernen. Über die Angabe von `id`, wird der Einsatz identifiziert.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/foreignId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/operation-ric'
+      responses:
+        200:
+          description: Einsatzmittel wurden erfolgreich entfernt oder waren zuvor nicht zugeordnet. Es werden alle noch zugeordneten Einsatzmittel aufgelistet (Primärschlüssel von DIVERA).
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/operation-ric-delete-response'
+        403:
+          description: Accesskey fehlt oder ist ungültig
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/response-forbidden'
+        404:
+          description: Ein Einsatz mit der angegebenen `id` existiert nicht.
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/response-not-found'
+      security:
+        - Accesskey: []
+
+  /api/v2/operations/alert?foreign_id={foreign_id}:
+    post:
+      tags:
+        - Einsatzdaten
+      summary: Zugeordnete Einsatzmittel alarmieren
+      description: Alle über `/api/v2/operations/ric` einem Einsatz neu zugeordneten Einsatzmittel alarmieren. Wenn der Endpunkt mehrfach aufgerufen wird,  werden nur neu hinzugefügte und noch nicht alarmierte Einsatzmittel alarmiert. Über die Angabe von `foreign_id`, wird der Einsatz identifiziert.
+      parameters:
+        - name: foreign_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/foreignId'
+      requestBody:
+        description: Optional kann im Body des Requests eine Liste von RICs angegeben werden, die zuvor bereits dem Einsatz über einen POST Aufruf auf /api/v2/operations/ric hinzugefügt wurden, um nur diese RICs zu alarmieren. Wird ric_names nicht übergeben, werden alle zuvor hinzugefügten RICs alarmiert. Bei mehrfachen Aufrufen dieser API werden bereits alarmierte RICs nicht erneut alarmiert.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/operation-ric'
+      responses:
+        200:
+          description: Einsatzmittel wurden erfolgreich alarmiert.
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/operation-ric-response'
+        403:
+          description: Accesskey fehlt oder ist ungültig
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/response-forbidden'
+        404:
+          description: Ein Einsatz mit der angegebenen `foreign_id` existiert nicht.
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/response-not-found'
+      security:
+        - Accesskey: []
+
+  /api/v2/operations/{id}/alert:
+    post:
+      tags:
+        - Einsatzdaten
+      summary: Zugeordnete Einsatzmittel alarmieren
+      description: Alle über `/api/v2/operations/ric` einem Einsatz neu zugeordneten Einsatzmittel alarmieren. Wenn der Endpunkt mehrfach aufgerufen wird,  werden nur neu hinzugefügte und noch nicht alarmierte Einsatzmittel alarmiert. Über die Angabe von `id`, wird der Einsatz identifiziert.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            description: Id der Operation
+      requestBody:
+        description: Optional kann im Body des Requests eine Liste von RICs angegeben werden, die zuvor bereits dem Einsatz über einen POST Aufruf auf /api/v2/operations/ric hinzugefügt wurden, um nur diese RICs zu alarmieren. Wird ric_names nicht übergeben, werden alle zuvor hinzugefügten RICs alarmiert. Bei mehrfachen Aufrufen dieser API werden bereits alarmierte RICs nicht erneut alarmiert.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/operation-ric'
+      responses:
+        200:
+          description: Einsatzmittel wurden erfolgreich alarmiert.
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/operation-ric-response'
+        403:
+          description: Accesskey fehlt oder ist ungültig
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/response-forbidden'
+        404:
+          description: Ein Einsatz mit der angegebenen `foreign_id` existiert nicht.
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/response-not-found'
+      security:
+        - Accesskey: []
+
+  /api/v2/operations/realert?foreign_id={foreign_id}:
+    post:
+      tags:
+        - Einsatzdaten
+      summary: Zugeordnete Einsatzmittel erneut alarmieren
+      description: Alle über `/api/v2/operations/ric` einem Einsatz neu zugeordneten Einsatzmittel werden erneut alarmieren. Über die Angabe von `foreign_id`, wird der Einsatz identifiziert. Anders als bei `/alert` ist dies nur möglich, wenn das Einsatzmittel bereits alarmiert worden ist.
+      parameters:
+        - name: foreign_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/foreignId'
+      requestBody:
+        description: Im Body des Requests muss Liste von RICs angegeben werden, welche erneut werden sollen.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/operation-ric'
+      responses:
+        200:
+          description: Einsatzmittel wurden erfolgreich erneut alarmiert.
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/operation-ric-response'
+        403:
+          description: Accesskey fehlt oder ist ungültig
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/response-forbidden'
+        404:
+          description: Ein Einsatz mit der angegebenen `foreign_id` existiert nicht.
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/response-not-found'
+      security:
+        - Accesskey: []
+
+  /api/v2/operations/{id}/realert:
+    post:
+      tags:
+        - Einsatzdaten
+      summary: Zugeordnete Einsatzmittel erneut alarmieren
+      description: Alle über `/api/v2/operations/ric` einem Einsatz neu zugeordneten Einsatzmittel werden erneut alarmieren. Über die Angabe von `id`, wird der Einsatz identifiziert. Anders als bei `/alert` ist dies nur möglich, wenn das Einsatzmittel bereits alarmiert worden ist.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            description: Eindeutige Id der Operation
+      requestBody:
+        description: Im Body des Requests muss Liste von RICs angegeben werden, welche erneut werden sollen.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/operation-ric'
+      responses:
+        200:
+          description: Einsatzmittel wurden erfolgreich erneut alarmiert.
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/operation-ric-response'
+        403:
+          description: Accesskey fehlt oder ist ungültig
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/response-forbidden'
+        404:
+          description: Ein Einsatz mit der angegebenen `foreign_id` existiert nicht.
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/response-not-found'
+      security:
+        - Accesskey: []
+
+  /api/v2/operations/archive?foreign_id={foreign_id}:
+    post:
+      tags:
+        - Einsatzdaten
+      summary: Einsatz archivieren
+      description: Einsatz im System archivieren
+      parameters:
+        - name: foreign_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/foreignId'
+
+      responses:
+        200:
+          description: Einsatz wurde erfolgreich erzeugt/aktualisiert. Die Antwort enthält den vollständigen Einsatz nach Aktualisierung
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/operation'
+        403:
+          description: Accesskey fehlt oder ist ungültig
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/response-forbidden'
+        404:
+          description: Ein Einsatz mit der angegebenen `foreign_id` existiert nicht.
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/response-not-found'
+      security:
+        - Accesskey: []
+
+  /api/v2/operations/{id}/archive:
+    post:
+      tags:
+        - Einsatzdaten
+      summary: Einsatz archivieren
+      description: Einsatz im System archivieren
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/foreignId'
+      responses:
+        200:
+          description: Einsatz wurde erfolgreich erzeugt/aktualisiert. Die Antwort enthält den vollständigen Einsatz nach Aktualisierung
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/operation'
+        403:
+          description: Accesskey fehlt oder ist ungültig
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/response-forbidden'
+        404:
+          description: Ein Einsatz mit der angegebenen `foreign_id` existiert nicht.
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/response-not-found'
+      security:
+        - Accesskey: []
+
+  /api/v2/operations/state/close?foreign_id={foreign_id}:
+    post:
+      tags:
+        - Einsatzdaten
+      summary: Einsatz abschließen
+      description: Einsatz im System als abgeschlossen markieren
+      parameters:
+        - name: foreign_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/foreignId'
+      responses:
+        200:
+          description: Einsatz wurde erfolgreich aktualisiert. Die Antwort enthält den vollständigen Einsatz nach Aktualisierung
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/operation'
+        403:
+          description: Accesskey fehlt oder ist ungültig
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/response-forbidden'
+        404:
+          description: Ein Einsatz mit der angegebenen `foreign_id` existiert nicht.
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/response-not-found'
+      security:
+        - Accesskey: []
+  /api/v2/operations/{id}/state/close:
+    post:
+      tags:
+        - Einsatzdaten
+      summary: Einsatz abschließen
+      description: Einsatz im System als abgeschlossen markieren
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            description: Eindeutige id der Operation.
+
+      responses:
+        200:
+          description: Einsatz wurde erfolgreich aktualisiert. Die Antwort enthält den vollständigen Einsatz nach Aktualisierung
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/operation'
+        403:
+          description: Accesskey fehlt oder ist ungültig
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/response-forbidden'
+        404:
+          description: Ein Einsatz mit der angegebenen `foreign_id` existiert nicht.
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/response-not-found'
+      security:
+        - Accesskey: []
+
+  /api/v2/operations/state/open?foreign_id={foreign_id}:
+    post:
+      tags:
+        - Einsatzdaten
+      summary: Einsatz erneut öffnen
+      parameters:
+        - name: foreign_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/foreignId'
+
+      responses:
+        200:
+          description: Einsatz wurde erfolgreich aktualisiert. Die Antwort enthält den vollständigen Einsatz nach Aktualisierung
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/operation'
+        403:
+          description: Accesskey fehlt oder ist ungültig
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/response-forbidden'
+        404:
+          description: Ein Einsatz mit der angegebenen `foreign_id` existiert nicht.
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/response-not-found'
+      security:
+        - Accesskey: []
+
+  /api/v2/operations/{id}/state/open:
+    post:
+      tags:
+        - Einsatzdaten
+      summary: Einsatz erneut öffnen
+      description: Einsatz im System als geöffnet markieren
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            description: Eindeutige id der Operation.
+
+      responses:
+        200:
+          description: Einsatz wurde erfolgreich aktualisiert. Die Antwort enthält den vollständigen Einsatz nach Aktualisierung
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/operation'
+        403:
+          description: Accesskey fehlt oder ist ungültig
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/response-forbidden'
+        404:
+          description: Ein Einsatz mit der angegebenen `foreign_id` existiert nicht.
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/response-not-found'
+      security:
+        - Accesskey: []
+
+  /api/v2/operations/results/responses:
+    get:
+      tags:
+        - Datenrückführung
+      summary: Endpunkt zum Abrufen der Rückmeldungen zu einer Operation. Die Rückmeldungen werden in Zeitslots gruppiert, die über den Leitstellen-Account konfiguriert werden können. Standardmäßig werden die Rückmeldungen aller adressierten Einheiten zurückgegeben. Sie lassen sich über die Parameter `cluster_name`, `cluster_id`, `ric_id` oder `ric_name` filtern.
+      parameters:
+        - name: output
+          in: query
+          required: false
+          description: Hiermit wird gesteuert, ob die Ausgabe als JSON (`json`) oder Plain-Text (`plain`) erfolgt.
+          schema:
+            type: string
+            enum: [plain, json]
+            default: json
+        - name: foreign_id
+          in: query
+          required: true
+          description: Angabe der internen Kennung des Einsatzes im Einsatzleitsystem (Fremdschlüssel), für den die Rückmeldungen abgerufen werden sollen. Wenn dieser Parameter nicht angegeben wird, muss `number` oder `operation_id` angegeben werden.
+          schema:
+            type: string
+            example: ise1235b67sad92309
+        - name: number
+          in: query
+          required: true
+          description: Angabe der Einsatznummer eines Einsatzes, für den die Rückmeldungen abgerufen werden sollen. Wenn dieser Parameter nicht angegeben wird, muss `operation_id` oder `foreign_id` angegeben werden.
+          schema:
+            type: string
+            example: 2023-12345
+        - name: operation_id
+          in: query
+          required: true
+          description: Angabe des Primärschlüssels einer Operation, für die die Rückmeldungen abgerufen werden sollen. Wenn dieser Parameter nicht angegeben wird, muss `number` oder `foreign_id` angegeben werden.
+          schema:
+            type: integer
+            example: 12345
+        - name: cluster_name
+          in: query
+          required: false
+          description: Optionaler Filter der Rückmeldungen, nach dem Namen einer Einheit.
+          schema:
+            type: string
+            example: FF Mitte
+        - name: cluster_id
+          in: query
+          required: false
+          description: Optionaler Filter der Rückmeldungen, nach dem Primärschlüssel einer Einheit.
+          schema:
+            type: integer
+            example: 1234
+        - name: ric_name
+          in: query
+          schema:
+            type: string
+            example: HLF-20
+          required: false
+          description: Optionaler Filter der Rückmeldungen, nach dem Namen einer RIC.
+        - name: ric_id
+          in: query
+          schema:
+            type: integer
+            example: 12346
+          required: false
+          description: Optionaler Filter der Rückmeldungen, nach dem Primärschlüssel einer RIC.
+      responses:
+        200:
+          description: successful
+          content:
+            "application/json":
+              schema:
+                type: object
+                properties:
+                  total:
+                    type: object
+                    properties:
+                      title:
+                        type: string
+                        example: Gesamt
+                      slots:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            title:
+                              type: string
+                              example: 5 Min
+                            description:
+                              type: string
+                              example: 5 Minuten
+                            sum:
+                              type: number
+                              example: 6
+                            tactical:
+                              properties:
+                                textual:
+                                  type: string
+                                  example: 0/1/5/6
+                                components:
+                                  type: array
+                                  items:
+                                    type: object
+                                    properties:
+                                      title:
+                                        type: string
+                                        example: leader_operation
+                                      description:
+                                        type: string
+                                        example: Zugführer
+                                      count:
+                                        type: number
+                                        example: 0
+                              type: object
+                            qualifications:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  id:
+                                    type: number
+                                    example: 1
+                                  title:
+                                    type: string
+                                    example: AGT
+                                  description:
+                                    type: string
+                                    example: Atemschutzgeräteträger
+                                  count:
+                                    type: number
+                                    example: 3
+                            user_cluster_relations:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  id:
+                                    type: number
+                                    example: 42
+                                  ts_response:
+                                    type: number
+                                    example: 123456
+                                  name:
+                                    type: string
+                                    example: Maxime Muster
+                                  status_id:
+                                    type: number
+                                    example: 42
+                                  status_name:
+                                    type: string
+                                    example: Ja
+                                  freetext:
+                                    type: string
+                  clusters:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: number
+                          example: 42
+                        title:
+                          type: string
+                          example: LZ 1
+                        description:
+                          type: string
+                          example: Feuerwehr LZ 1
+                        slots:
+                          type: array
+                          items:
+                            type: object
+                          example: []
+                  rics:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: number
+                          example: 91
+                        title:
+                          type: string
+                          example: 1-HLF-11
+                        description:
+                          type: string
+                          example: HLF RIC Beschreibung
+                        slots:
+                          type: array
+                          items:
+                            type: object
+                          example: []
+            "text/plain":
+              schema:
+                type: string
+                example: "--------------------------------------------\n
+                       | Gesamt      5min  | Gesamt         10min |\n
+                       |     0/1/5/6       |       1/2/9/12       |\n
+                       |------------------------------------------|\n
+                       --------------------------------------------\n
+                       | LZ1         5min  | LZ1            10min |\n
+                       |     0/1/5/6       |       1/2/9/12       |\n
+                       |------------------------------------------|\n
+                       --------------------------------------------\n
+                       | 1-LZ-1      5min  | 1-LZ-1         10min |\n
+                       |     0/1/5/6       |       1/2/9/12       |\n
+                       |------------------------------------------|"
+  /api/v2/operations/results/reached:
+    get:
+      tags:
+        - Datenrückführung
+      summary: Endpunkt zum Abrufen der über DIVERA 24/7 erreichten Empfänger. Standardmäßig werden die erreichten Empfänger aller adressierten Einheiten zurückgegeben.
+      parameters:
+        - name: foreign_id
+          in: query
+          required: true
+          description: Angabe der internen Kennung des Einsatzes im Einsatzleitsystem (Fremdschlüssel), für den die Rückmeldungen abgerufen werden sollen. Wenn dieser Parameter nicht angegeben wird, muss `number` oder `operation_id` angegeben werden.
+          schema:
+            type: string
+            example: ise1235b67sad92309
+        - name: number
+          in: query
+          required: true
+          description: Angabe der Einsatznummer eines Einsatzes, für den die Rückmeldungen abgerufen werden sollen. Wenn dieser Parameter nicht angegeben wird, muss `operation_id` oder `foreign_id` angegeben werden.
+          schema:
+            type: string
+            example: 2023-12345
+        - name: operation_id
+          in: query
+          required: true
+          description: Angabe des Primärschlüssels einer Operation, für die die Rückmeldungen abgerufen werden sollen. Wenn dieser Parameter nicht angegeben wird, muss `number` oder `foreign_id` angegeben werden.
+          schema:
+            type: integer
+            example: 12345
+      responses:
+        200:
+          description: successful
+          content:
+            "application/json":
+              schema:
+                type: object
+                properties:
+                  total:
+                    type: object
+                    properties:
+                      count:
+                        type: object
+                        properties:
+                          read:
+                            type: integer
+                            example: 42
+                          received:
+                            type: integer
+                            example: 50
+                          addressed:
+                            type: integer
+                            example: 200
+                      addressed_user_cluster_relations:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                              example: 1234
+                            foreign_id:
+                              type: string
+                              example: 12345
+                            ts_received:
+                              type: integer
+                              example: 1234255
+                            ts_read:
+                              type: integer
+                              nullable: true
+                              example: null
+                            response:
+                              type: object
+                              properties:
+                                status_id:
+                                  example: 42
+                                freetext:
+                                  example: Testtest
+                  clusters:
+                    type: array
+                    items:
+                      type: object
+                  rics:
+                    type: array
+                    items:
+                      type: object
+                  alarms:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        cluster_id:
+                          type: integer
+                          example: 12345
+                        id:
+                          type: integer
+                          example: 123455
+                        foreign_id:
+                          type: string
+                          example: ise123345
+                        addressed_user_cluster_relations:
+                          type: object
+                          properties:
+  /api/v2/operations/alarms:
+    get:
+      tags:
+        - Datenrückführung
+      summary: Endpunkt zum Abrufen der aus einer Operation erzeugten Alarmierungen in den verknüpften Einheit, mit den jeweiligen Meta-Informationen.
+      parameters:
+        - name: foreign_id
+          in: query
+          required: true
+          description: Angabe der internen Kennung des Einsatzes im Einsatzleitsystem (Fremdschlüssel), für den die Rückmeldungen abgerufen werden sollen. Wenn dieser Parameter nicht angegeben wird, muss `number` oder `operation_id` angegeben werden.
+          schema:
+            type: string
+            example: ise1235b67sad92309
+        - name: number
+          in: query
+          required: true
+          description: Angabe der Einsatznummer eines Einsatzes, für den die Rückmeldungen abgerufen werden sollen. Wenn dieser Parameter nicht angegeben wird, muss `operation_id` oder `foreign_id` angegeben werden.
+          schema:
+            type: string
+            example: 2023-12345
+        - name: operation_id
+          in: query
+          required: true
+          description: Angabe des Primärschlüssels einer Operation, für die die Rückmeldungen abgerufen werden sollen. Wenn dieser Parameter nicht angegeben wird, muss `number` oder `foreign_id` angegeben werden.
+          schema:
+            type: integer
+            example: 12345
+      responses:
+        200:
+          description: successful
+          content:
+            "application/json":
+              schema:
+                type: array
+                items:
+                  type: "object"
+                  required:
+                    - "id"
+                    - "cluster_id"
+                    - "operation_id"
+                    - "foreign_id"
+                    - "ts_create"
+                    - "title"
+                    - "text"
+                    - "groups"
+                    - "vehicles"
+                    - "clusters"
+                    - "user_cluster_relations"
+                  properties:
+                    id:
+                      type: "number"
+                      example: 123455
+                    cluster_id:
+                      type: "number"
+                      example: 12345
+                    operation_id:
+                      type: "number"
+                      example: 1234
+                    foreign_id:
+                      type: "string"
+                      example: "1244"
+                    ts_create:
+                      type: "number"
+                      example: 121212
+                    title:
+                      type: "string"
+                      example: "ALAAARM!"
+                    text:
+                      type: "string"
+                      example: "Detailtext..."
+                    groups:
+                      type: "array"
+                      items:
+                        type: "object"
+                        properties:
+                          id:
+                            type: "number"
+                            example: 12
+                          title:
+                            type: "string"
+                            example: "AGT"
+                    vehicles:
+                      type: "array"
+                      items:
+                        type: "object"
+                        properties:
+                          id:
+                            type: "number"
+                            example: 12
+                          title:
+                            type: "string"
+                            example: "FZ-1"
+                          description:
+                            type: "string"
+                            example: "Fahrzeug 1"
+                    clusters:
+                      type: "array"
+                      items:
+                        type: "object"
+                        properties:
+                          id:
+                            type: "number"
+                            example: 12
+                          title:
+                            type: "string"
+                            example: "LZ-1"
+                    user_cluster_relations:
+                      type: "array"
+                      items:
+                        type: "object"
+                        properties:
+                          id:
+                            type: "number"
+                            example: 112
+                          foreign_id:
+                            type: "string"
+                            example: "?"
+
+components:
+  securitySchemes:
+    Accesskey:
+      type: apiKey
+      name: accesskey
+      in: query
+
+  schemas:
+    foreignId:
+      type: string
+      example: "de1234000000abcdefga00"
+      description: Im Leitstellensystem verwendeter Schlüssel zur Identifizierung des Einsatzes.
+
+    operation:
+      type: object
+      properties:
+        foreign_id:
+          type: string
+          example: "de1234000000abcdefga00"
+          description: Im Leitstellensystem verwendeter Schlüssel zur Identifizierung des Einsatzes. Kann in nachfolgenden Requests angegeben werden, um den Einsatz zu aktualisieren. Dieser Wert ist für Einheiten nicht sichtbar.
+          minLength: 1
+          maxLength: 64
+        number:
+          type: string
+          example: "2020-00001"
+          description: Einsatznummer, wie sie für die Einheit sichtbar sein soll.
+          minLength: 0
+          maxLength: 64
+        priority:
+          type: boolean
+          example: true
+          description: Sonderrechte für den Einsatz gesetzt?
+        title:
+          type: string
+          example: "F4 02 Altenheim / Krankenhaus"
+          description: Einsatzstichwort
+          minLength: 0
+          maxLength: 255
+        text:
+          type: string
+          example: "Es brennt im Aufzug, Brandgeruch auf der 4. OG"
+          description: Freitext des Disponenten
+          minLength: 0
+          maxLength: 64000
+        reporter:
+          type: string
+          example: Max Mustermann
+          description: Meldender
+          minLength: 0
+          maxLength: 255
+        patient:
+          type: string
+          example: Max Mustermann
+          description: Patient
+          minLength: 0
+          maxLength: 255
+        address:
+          type: string
+          example: "Musterstr. 1a, 12345 Musterstadt-Musterortsteil"
+          description: 'Zusammengesetzte Adresse nach dem Schema: Straße Hausnummer, PLZ Ort-Ortsteil'
+          minLength: 0
+          maxLength: 255
+        address_freetext:
+          type: string
+          example: "Umleitung über Nordstr. durch Sperrung der Hauptstr."
+          description: Freitext zur Adresse mit Hinweisen
+          minLength: 0
+          maxLength: 64000
+        scene_object:
+          type: string
+          example: "Altenheim Nord"
+          description: Name des Objekts
+          minLength: 0
+          maxLength: 64000
+        lat:
+          type: number
+          example: 51.12345678
+          description: Breitengrad der Adresskoordinaten
+        lng:
+          type: number
+          example: 6.12345678
+          description: Längengrad der Adresskoordinaten
+        destination:
+          type: boolean
+          example: true
+          description: Ist ein Transportziel hinterlegt (bspw. bei RTW Einsätzen)?
+        destination_address:
+          type: string
+          example: "Krankenhausstr. 1a, 12345 Musterstadt-Musterortsteil"
+          description: 'Transportziel nach dem Schema: Straße Hausnummer, PLZ Ort-Ortsteil'
+          minLength: 0
+          maxLength: 255
+        destination_lat:
+          type: number
+          example: 52.12345678
+          description: Breitengrad des Transportziels
+        destination_lng:
+          type: number
+          example: 7.12345678
+          description: Längengrad des Transportziels
+        destination_freetext:
+          type: string
+          example: "Ausreichend Kapazität im Krankenhaus"
+          description: Freitext zum Transportziel mit Hinweisen
+          minLength: 0
+          maxLength: 64000
+        units:
+          type: string
+          example: 01.ELW.01, 01.HLF20.01, 01.HLF20.02, 01.DL.01, 01.RTW.01
+          description: Kommaseparierte Liste von Rettungsmitteln
+          minLength: 0
+          maxLength: 64000
+        custom:
+          type: array
+          description: Liste von weitere Daten, die im Zusammenhang mit der Operation entegegen genommen werden sollen, jedoch bisher nicht über ein Feld abgebildet werden.
+          items:
+            type: object
+            description: Datenendpunkt, welcher der Operation angefügt werden soll.
+            properties:
+              key:
+                type: string
+                description: Eindeutiger key des Daten-Punktes
+                example: hydrant-book
+                minLength: 1
+                maxLength: 64
+              title:
+                type: string
+                description: Titel des Daten-Punktes
+                example: Seite und Planquardrat im Planbuch/Hydrantenbuch
+                minLength: 1
+                maxLength: 255
+              value:
+                type: string
+                description: Wert des Daten-Punktes
+                example: 15 H2
+                minLength: 0
+                maxLength: 64000
+          example:
+            - key: hydrant-book
+              title: Seite und Planquardrat im Planbuch/Hydrantenbuch
+              value: 15 H2
+            - key: trigger
+              title: Anruferweg
+              value: Call to 19222
+    operation-response:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 12345
+          description: Interne Id innerhalb von DIVERA der vorliegenden Operation. Kann auch als alternative zur foreign_id in APIs verwendet werden.
+        foreign_id:
+          type: string
+          example: "de1234000000abcdefga00"
+          description: Im Leitstellensystem verwendeter Schlüssel zur Identifizierung des Einsatzes. Kann in nachfolgenden Requests angegeben werden, um den Einsatz zu aktualisieren. Dieser Wert ist für Einheiten nicht sichtbar.
+        number:
+          type: string
+          example: "2020-08-10-00001"
+          description: Einsatznummer, wie sie für die Einheit sichtbar sein soll.
+        priority:
+          type: boolean
+          example: true
+          description: Sonderrechte für den Einsatz gesetzt?
+        title:
+          type: string
+          example: "F4 02 Altenheim / Krankenhaus"
+          description: Einsatzstichwort
+        text:
+          type: string
+          example: "Es brennt im Aufzug, Brandgeruch auf der 4. OG"
+          description: Freitext des Disponenten
+        reporter:
+          type: string
+          example: Max Mustermann
+          description: Meldender
+        patient:
+          type: string
+          example: Max Mustermann
+          description: Patient
+        address:
+          type: string
+          example: "Musterstr. 1a, 12345 Musterstadt-Musterortsteil"
+          description: 'Zusammengesetzte Adresse nach dem Schema: Straße Hausnummer, PLZ Ort-Ortsteil'
+        address_freetext:
+          type: string
+          example: "Umleitung über Nordstr. durch Sperrung der Hauptstr."
+          description: Freitext zur Adresse mit Hinweisen
+        scene_object:
+          type: string
+          example: "Altenheim Nord"
+          description: Name des Objekts
+        lat:
+          type: number
+          example: 51.12345678
+          description: Breitengrad der Adresskoordinaten
+        lng:
+          type: number
+          example: 6.12345678
+          description: Längengrad der Adresskoordinaten
+        destination:
+          type: boolean
+          example: true
+          description: Ist ein Transportziel hinterlegt (bspw. bei RTW Einsätzen)?
+        destination_address:
+          type: string
+          example: "Krankenhausstr. 1a, 12345 Musterstadt-Musterortsteil"
+          description: 'Transportziel nach dem Schema: Straße Hausnummer, PLZ Ort-Ortsteil'
+        destination_lat:
+          type: number
+          example: 52.12345678
+          description: Breitengrad des Transportziels
+        destination_lng:
+          type: number
+          example: 7.12345678
+          description: Längengrad des Transportziels
+        destination_freetext:
+          type: string
+          example: "Ausreichend Kapazität im Krankenhaus"
+          description: Freitext zum Transportziel mit Hinweisen
+        units:
+          type: string
+          example: 01.ELW.01, 01.HLF20.01, 01.HLF20.02, 01.DL.01, 01.RTW.01
+          description: Kommaseparierte Liste von Rettungsmitteln
+        custom:
+          type: array
+          description: Liste von weitere Daten, die im Zusammenhang mit der Operation entegegen genommen werden sollen, jedoch bisher nicht über ein Feld abgebildet werden.
+          items:
+            type: object
+            description: Datenendpunkt, welcher der Operation angefügt werden soll.
+            properties:
+              key:
+                type: string
+                description: Eindeutiger key des Daten-Punktes
+                example: hydrant-book
+              title:
+                type: string
+                description: Titel des Daten-Punktes
+                example: Seite und Planquardrat im Planbuch/Hydrantenbuch
+              value:
+                type: string
+                description: Wert des Daten-Punktes
+                example: 15 H2
+          example:
+            - key: hydrant-book
+              title: Seite und Planquardrat im Planbuch/Hydrantenbuch
+              value: 15 H2
+            - key: trigger
+              title: Anruferweg
+              value: Call to 19222
+
+    operation-ric:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: integer
+            example: 42
+            description: Id des Einsatzmittel
+          name:
+            type: string
+            example: '12345678'
+            description: RIC/Namen des Einsatzmittel
+          subric:
+            type: string
+            example: A
+            description: Sub-RIC/Namens-Postfix des Einsatzmittel
+    operation-file:
+      type: object
+      properties:
+        title:
+          type: string
+          example: Depesche
+          description: Beschreibung der Datei
+        description:
+          type: string
+          example: Fax-Depesche für die Feuerwehr
+          description: Beschreibung des Datei-Inhalts
+        filename:
+          type: string
+          example: dateiname.pdf
+          description: Anzeige-Name der Datei
+        content_type:
+          type: string
+          example: application/pdf
+          description: MIME-Type der Datei
+        file_content:
+          type: string
+          example: CiAgeyB1cmw6ICdkb2NzL2FwaV92Ml9hdHRhY2htZW50LnlhbWwnLCBuYW1lOiAnYXBpL3YyL2F0dGFjaG1lbnQnIH0sCiAgeyB1cmw6ICdkb2NzL2FwaV92Ml9kYXNoYm9hcmQueWFtbCcsIG5hbWU6ICdhcGkvdjIvZGFzaGJvYXJkJyB9LAogIHsgdXJsOiAnZG9jcy9hcGlfdjJfZmlsZS55YW1sJywgbmFtZTogJ2FwaS92Mi9maWxlJyB9LAogICB7IHVybDogJ2RvY3MvYXBpX3YyX3Bhc3N3b3JkLnlhbWwnLCBuYW1lOiAnYXBpL3YyL3Bhc3N3b3JkJyB9LAoKIAogIAogIAogIAoK
+          description: Datei im base64-Format
+
+    operation-file-response:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 42
+          description: Eindeutige Id des Anhangs
+        author_id:
+          type: integer
+          example: 42
+          description: Eindeutige Id des Authors der Datei
+        title:
+          type: string
+          example: Depesche
+          description: Beschreibung der Datei
+        description:
+          type: string
+          example: Fax-Depesche für die Feuerwehr
+          description: Beschreibung des Datei-Inhalts
+        filename:
+          type: string
+          example: dateiname.pdf
+          description: Anzeige-Name der Datei
+        content_type:
+          type: string
+          example: application/pdf
+          description: MIME-Type der Datei
+
+    operation-ric-response:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: integer
+            example: 42
+            description: Id des Einsatzmittel
+          name:
+            type: string
+            example: '12345678'
+            description: RIC/Namen des Einsatzmittel
+    operation-ric-response-get:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: integer
+            example: 45
+            description: Primärschlüssel des Einsatzmittels
+          name:
+            type: string
+            example: Foo
+            description: Name des Einsatzmittels
+
+    operation-ric-put-response:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: integer
+            example: 42
+            description: Id des Einsatzmittel
+          name:
+            type: string
+            example: '12345678'
+            description: RIC/Namen des Einsatzmittel
+
+    operation-ric-delete-response:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: integer
+            example: 42
+            description: Id des Einsatzmittel
+          name:
+            type: string
+            example: '12345678'
+            description: RIC/Namen des Einsatzmittel
+
+    response-forbidden:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "Forbidden"
+          description: Name der Fehlermeldung
+        message:
+          type: string
+          example: "Nicht autorisiert"
+          description: Text der Fehlermeldung
+        status:
+          type: integer
+          example: 403
+          description: Status-Code der Antwort
+
+    response-not-found:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "Not Found"
+          description: Name der Fehlermeldung
+        message:
+          type: string
+          example: "Object not found"
+          description: Text der Fehlermeldung
+        status:
+          type: integer
+          example: 404
+          description: Status-Code der Antwort

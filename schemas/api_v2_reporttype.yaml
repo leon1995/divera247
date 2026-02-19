@@ -1,0 +1,947 @@
+openapi: 3.0.0
+info:
+  title: DIVERA 24/7 RESTful Webservice für Formulare und Formularauswertungen
+  description: "Diese API von DIVERA 24/7 bietet Möglichkeiten Formulare zu verwalten, Benutzereingaben hinzuzufügen und Formulare auszuwerten."
+  version: 4.1.0
+  contact:
+    name: DIVERA 24/7
+    url: https://www.divera247.com
+servers:
+  - url: https://app.divera247.com
+  - url: https://app.staging247.de
+tags:
+  - name: Formularverwaltung
+    description: Formularvorlagen erstellen, bearbeiten und löschen
+  - name: Formulareingabe
+    description: Formulare ausfüllen und bearbeiten
+  - name: Formulare auswerten
+    description: Ausgefüllte Formulare abfragen und herunterladen.
+paths:
+  /api/v2/reporttypes:
+    get:
+      tags:
+        - Formularverwaltung
+      summary: Alle Formulare abfragen.
+      responses:
+        200:
+          description: Alle verfügbaren Formulare werden abfragen.
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      items:
+                        type: object
+                        properties:
+                          id:
+                            $ref: '#/components/schemas/reporttype-id'
+                          name:
+                            $ref: '#/components/schemas/reporttype-name'
+                          description:
+                            $ref: '#/components/schemas/reporttype-description'
+                          version:
+                            $ref: '#/components/schemas/reporttype-version'
+                          uploads:
+                            $ref: '#/components/schemas/reporttype-uploads'
+                          anonym:
+                            $ref: '#/components/schemas/reporttype-anonym'
+                          location:
+                            $ref: '#/components/schemas/reporttype-location'
+                          vehicle:
+                            $ref: '#/components/schemas/reporttype-vehicle'
+                          fields:
+                            $ref: '#/components/schemas/fields'
+                      sorting:
+                        type: array
+                        description: "Sortierung der Formulare"
+                        items:
+                          type: number
+                        example: [654]
+                  ucr:
+                    $ref: '#/components/schemas/ucr'
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+        404:
+          description: Eintrag unbekannt
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response-not-found'
+      security:
+        - Personal-API-Accesskey: []
+
+  /api/v2/reporttypes/{id}:
+    get:
+      tags:
+        - Formularverwaltung
+      summary: Einzelnes Formular abfragen.
+      parameters:
+        - name: id
+          in: path
+          description: ID des Formulars
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Das angeforderte Formular wird als JSON Objekt zurückgegeben.
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    properties:
+                      id:
+                        $ref: '#/components/schemas/reporttype-id'
+                      name:
+                        $ref: '#/components/schemas/reporttype-name'
+                      description:
+                        $ref: '#/components/schemas/reporttype-description'
+                      version:
+                        $ref: '#/components/schemas/reporttype-version'
+                      uploads:
+                        $ref: '#/components/schemas/reporttype-uploads'
+                      anonym:
+                        $ref: '#/components/schemas/reporttype-anonym'
+                      location:
+                        $ref: '#/components/schemas/reporttype-location'
+                      vehicle:
+                        $ref: '#/components/schemas/reporttype-vehicle'
+                      skip_empty:
+                        $ref: '#/components/schemas/reporttype-skip_empty'
+                      pdf_layout:
+                        $ref: '#/components/schemas/reporttype-pdf_layout'
+                      fields:
+                        $ref: '#/components/schemas/fields'
+                  ucr:
+                    $ref: '#/components/schemas/ucr'
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+        404:
+          description: Eintrag unbekannt
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response-not-found'
+      security:
+        - Personal-API-Accesskey: []
+    delete:
+      tags:
+        - Formularverwaltung
+      summary: Formular löschen
+      parameters:
+        - name: id
+          in: path
+          description: ID des Formulars
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Bei erfolgreicher Löschung gibt der Server eine positive Meldung zurück.
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  ucr:
+                    $ref: '#/components/schemas/ucr'
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+        404:
+          description: Der gesuchte Eintrag ist unbekannt.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response-not-found'
+
+      security:
+        - Personal-API-Accesskey: []
+
+  /api/v2/reporttypes/{id}/reports:
+    get:
+      tags:
+        - Formulare auswerten
+      summary: Formular mit Benutzereingaben abfragen
+      description: Die Antwort auf diesen Aufruf enthält die ersten 50 Einträge. Durch den Query Parameter 'offset' könenn weitere Einträge ausgelesen werden. (Blätterfunktion)
+      parameters:
+        - name: id
+          in: path
+          description: Formular ID
+          required: true
+          example: 247
+          schema:
+            type: integer
+        - name: offset
+          description: Mit dem Offset-Parameter werden alle Einträge ausgeschlossen, die vor der gewünschten Nummer liegen. Der Parameter wird gesetzt um mehr als die ersten 50 Einträge auszulesen.
+          example: 0
+          required: false
+          in: query
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Das angeforderte Formular wird samt Benutzereingaben zurückgegeben.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              $ref: '#/components/schemas/report-id'
+                            cluster_id:
+                              $ref: '#/components/schemas/cluster_id'
+                            user_cluster_relation_id:
+                              $ref: '#/components/schemas/ucr'
+                            reporttype_id:
+                              $ref: '#/components/schemas/reporttype-id'
+                            cluster_use_vehicle_id:
+                              $ref: '#/components/schemas/reporttype-cluster_use_vehicle_id'
+                            status:
+                              $ref: '#/components/schemas/reporttype-status'
+                            attachment_count:
+                              $ref: '#/components/schemas/reporttype-attachment_count'
+                            attachment:
+                              $ref: '#/components/schemas/reporttype-attachment'
+                            lat:
+                              $ref: '#/components/schemas/reporttype-lat'
+                            lng:
+                              $ref: '#/components/schemas/reporttype-lng'
+                            address:
+                              $ref: '#/components/schemas/reporttype-address'
+                            fields:
+                              type: array
+                              description: "Eingabefelder des Formulars mit Benutzereingaben"
+                              items:
+                                type: object
+                                properties:
+                                  field:
+                                    $ref: '#/components/schemas/fields'
+                                  value:
+                                    type: string
+                                    example: "d8ee4ef9-e524-4811-9a10-ca4c2bf5f504"
+                            ts_create:
+                              type: number
+                              example: 1702566795
+                      itemcount:
+                        type: number
+                        example: 1
+                        description: 'Anzahl der Benutzereingaben gesamt'
+                  ucr:
+                    $ref: '#/components/schemas/ucr'
+
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+        404:
+          description: Formular unbekannt
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response-not-found'
+      security:
+        - Personal-API-Accesskey: []
+
+  /api/v2/reporttypes/{id}/copy:
+    post:
+      tags:
+        - Formularverwaltung
+      summary: Formular kopieren
+      parameters:
+        - name: id
+          in: path
+          description: ID des Formulars
+          example: 87
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Das Formular wird (ohne Benutzereingaben) kopiert.
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                  reporttype_id:
+                    $ref: '#/components/schemas/reporttype-id'
+                  ucr:
+                    $ref: '#/components/schemas/ucr'
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+        404:
+          description: Formular unbekannt
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response-not-found'
+      security:
+        - Personal-API-Accesskey: []
+
+  /api/v2/reporttypes/{id}/download/json:
+    get:
+      tags:
+        - Formulare auswerten
+      summary: Formular im JSON Format herunterladen.
+      parameters:
+        - name: id
+          in: path
+          description: ID des Formulars
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Das Formular wird mit allen Benutzereingaben als JSON zurückgegeben.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ucr:
+                    $ref: '#/components/schemas/ucr'
+                  reporttype:
+                    type: object
+                    properties:
+                      id:
+                        $ref: '#/components/schemas/reporttype-id'
+                      name:
+                        $ref: '#/components/schemas/reporttype-name'
+                      version:
+                        $ref: '#/components/schemas/reporttype-version'
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          $ref: '#/components/schemas/report-id'
+                        cluster_id:
+                          $ref: '#/components/schemas/cluster_id'
+                        coordinates:
+                          type: object
+                          properties:
+                            lat:
+                             $ref: '#/components/schemas/reporttype-lat'
+                            lng:
+                             $ref: '#/components/schemas/reporttype-lng'
+                        status:
+                             $ref: '#/components/schemas/reporttype-status'
+                        deleted:
+                             $ref: '#/components/schemas/reporttype-deleted'
+                        ts_create:
+                          type: object
+                          description: "Zeitstempel der Erstellung"
+                          properties:
+                            date:
+                              type: string
+                            timezone_type:
+                              type: number
+                            timezone:
+                              type: string
+                        reporttype_version:
+                          type: number
+                          description: "Aktuelle Formularversion"
+                        attachment_count:
+                          type: number
+                          description: "Anzahl der Dateianhänge"
+                        fields:
+                          type: object
+                          description: "Dynamische Auflistung der Eingabefelder mit den Benutzereingaben"
+                          properties:
+                            ...item:
+                              type: object
+                              properties:
+                                name:
+                                  type: string
+                                value:
+                                  type: string
+                                type:
+                                  type: string
+                            _version:
+                              type: object
+                              description: "Vom Benutzer ausgefüllte Formularversion"
+                              properties:
+                                name:
+                                  type: string
+                                value:
+                                  type: number
+                                type:
+                                  type: string
+                            _ts_create:
+                              type: object
+                              description: "Zeitpunkt der Benutzereingabe"
+                              properties:
+                                name:
+                                  type: string
+                                value:
+                                  type: string
+                                type:
+                                  type: string
+                            _user:
+                              type: object
+                              description: "Autor der Benutzereingabe"
+                              properties:
+                                name:
+                                  type: string
+                                value:
+                                  type: string
+                                type:
+                                  type: string
+
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+        404:
+          description: Formular unbekannt
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response-not-found'
+      security:
+        - Personal-API-Accesskey: []
+
+  /api/v2/reporttypes/{id}/download/csv:
+    get:
+      tags:
+        - Formulare auswerten
+      summary: Formular als CSV Datei herunterladen.
+      parameters:
+        - name: id
+          in: path
+          description: ID des Formulars
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Das Formular wird mit allen Benutzereingaben als CSV Datei zurückgegeben.
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+        404:
+          description: Eintrag unbekannt
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response-not-found'
+      security:
+        - Personal-API-Accesskey: []
+
+  /api/v2/reporttypes/{id}/download/xls:
+    get:
+      tags:
+        - Formulare auswerten
+      summary: Formular als XLS Datei herunterladen.
+      parameters:
+        - name: id
+          in: path
+          description: ID des Formulars
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: successful
+          content:
+            application/vnd.ms-excel:
+              schema:
+                type: string
+                format: binary
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+        404:
+          description: Eintrag unbekannt
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response-not-found'
+      security:
+        - Personal-API-Accesskey: []
+
+  /api/v2/reporttypes/{id}/download/xlsx:
+    get:
+      tags:
+        - Formulare auswerten
+      summary: Formular als XLSX Datei herunterladen.
+      parameters:
+        - name: id
+          in: path
+          description: ID des Formulars
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Das Formular wird mit allen Benutzereingaben als XLSX Datei zurückgegeben.
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+        404:
+          description: Eintrag unbekannt
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response-not-found'
+      security:
+        - Personal-API-Accesskey: []
+
+  /api/v2/reports:
+    post:
+      tags:
+        - Formulareingabe
+      summary: Benutzereingabe hinzufügen
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                Report:
+                  type: object
+                  properties:
+                    reporttype_id:
+                      $ref: '#/components/schemas/reporttype-id'
+                    address:
+                      $ref: '#/components/schemas/report-address'
+                    cluster_use_vehicle_id:
+                      $ref: '#/components/schemas/reporttype-cluster_use_vehicle_id'
+                    lat:
+                      $ref: '#/components/schemas/reporttype-lat'
+                    lng:
+                      $ref: '#/components/schemas/reporttype-lng'
+                    fields:
+                      $ref: '#/components/schemas/fields'
+                    uploads:
+                      type: array
+                      description: "Ein oder mehrere Dateien"
+                      items:
+                        type: object
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required:
+                  - Report[reporttype_id]
+                  - Report[fields][]
+              properties:
+                Report[reporttype_id]:
+                  $ref: '#/components/schemas/reporttype-id'
+                Report[address]:
+                  $ref: '#/components/schemas/report-address'
+                Report[lat]:
+                  $ref: '#/components/schemas/reporttype-lat'
+                Report[lon]:
+                  $ref: '#/components/schemas/reporttype-lng'
+                Report[fields][]:
+                  $ref: '#/components/schemas/fields'
+                Report[uploads][]:
+                  type: string
+                  format: binary
+                  description: DIVERA 24/7 Cloud Modul erforderlich und Formular Dateianhänge müssen erlaubt sein!
+      responses:
+        200:
+          description: Bei erfolgreicher Datenerfassung wird die Eingabe als Objekt zurückgegeben.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  ucr:
+                    $ref: '#/components/schemas/ucr'
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        $ref: '#/components/schemas/report-id'
+                      cluster_id:
+                        $ref: '#/components/schemas/cluster_id'
+                      user_cluster_relation_id:
+                        $ref: '#/components/schemas/ucr'
+                      reporttype_id:
+                        $ref: '#/components/schemas/reporttype-id'
+                      cluster_use_vehicle_id:
+                        $ref: '#/components/schemas/reporttype-cluster_use_vehicle_id'
+                      status:
+                        $ref: '#/components/schemas/reporttype-status'
+                      attachment_count:
+                        $ref: '#/components/schemas/reporttype-attachment_count'
+                      attachments:
+                        $ref: '#/components/schemas/report-attachment'
+                      lat:
+                        $ref: '#/components/schemas/reporttype-lat'
+                      lng:
+                        $ref: '#/components/schemas/reporttype-lng'
+                      address:
+                        $ref: '#/components/schemas/reporttype-address'
+                      fields:
+                        $ref: '#/components/schemas/fields'
+                      ts_create:
+                        type: number
+
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+        404:
+          description: Das angegebene Formular ist unbekannt.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response-not-found'
+      security:
+        - Personal-API-Accesskey: []
+
+  /api/v2/reports/{id}/status:
+    post:
+      tags:
+        - Formulareingabe
+      summary: Status der Benutzereingabe ändern
+      parameters:
+        - name: id
+          in: path
+          description: ID vom Eintrag
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                Report:
+                  type: object
+                  properties:
+                    status:
+                      $ref: '#/components/schemas/reporttype-status'
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required:
+                  - Report[status]
+              properties:
+                Report[status]:
+                  $ref: '#/components/schemas/reporttype-status'
+      responses:
+        200:
+          description: Bei erfolgreicher Statusaktualisierung erscheint eine positive Rückmeldung.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  ucr:
+                    $ref: '#/components/schemas/ucr'
+                  status:
+                    type: number
+        404:
+          description: Eintrag unbekannt
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response-not-found'
+      security:
+        - Personal-API-Accesskey: []
+
+  /api/v2/reports/{id}/download:
+    get:
+      tags:
+        - Formulare auswerten
+      summary: Benutzereingabe als XLS oder PDF Datei herunterladen
+      parameters:
+        - name: id
+          schema:
+            type: number
+          in: path
+          required: true
+        - name: format
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [worksheet, pdf]
+      responses:
+        200:
+          description: Der Server gibt eine XLS oder PDF Datei zurück.
+      security:
+        - Personal-API-Accesskey: []
+
+  /api/v2/reports/{id}:
+    delete:
+      tags:
+        - Formulareingabe
+      summary: Benutzereingabe löschen
+      parameters:
+        - name: id
+          in: path
+          description: ID der Benutzereingabe
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Bei erfolgreicher Löschung gibt der Server eine positive Rückmeldung.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  ucr:
+                    $ref: '#/components/schemas/ucr'
+        404:
+          description: Eintrag unbekannt
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response-not-found'
+      security:
+        - Personal-API-Accesskey: []
+
+  /api/v2/reports/{id}/attachment:
+    delete:
+      tags:
+        - Formulareingabe
+      summary: Dateianhang löschen
+      parameters:
+        - name: id
+          in: path
+          description: ID der Datei
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Bei erfolgreicher Löschung gibt der Server eine positive Rückmeldung.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  ucr:
+                    $ref: '#/components/schemas/ucr'
+                  message:
+                    type: string
+        404:
+          description: Datei unbekannt
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/response-not-found'
+      security:
+        - Personal-API-Accesskey: []
+
+components:
+  securitySchemes:
+    Personal-API-Accesskey:
+      type: apiKey
+      name: accesskey
+      in: query
+  schemas:
+
+    response-not-found:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "Not Found"
+          description: Name der Fehlermeldung
+        message:
+          type: string
+          example: "Object not found"
+          description: Text der Fehlermeldung
+        status:
+          type: integer
+          example: 404
+          description: Status-Code der Antwort
+
+    ucr:
+      type: number
+      example: 101
+      description: "Benutzer Einheit ID"
+    cluster_id:
+      type: number
+      example: 247
+      description: "ID der Einheit"
+
+    reporttype-id:
+      type: number
+      description: "Formular ID"
+      example: 112
+    reporttype-name:
+      type: string
+      example: "Meldeformular Sachbeschädigung"
+      description: "Formularname"
+    reporttype-description:
+      type: string
+      example: "Formular zur Meldung von Beschädigungen durch Dritte."
+      description: "Formularbeschreibung"
+    reporttype-version:
+      type: number
+      example: 2
+      description: "Versionsnummer"
+    reporttype-uploads:
+      type: boolean
+      example: true
+      description: "Gibt an das Dateianhänge möglich sind"
+    reporttype-anonym:
+      type: boolean
+      example: true
+      description: "Anonyme Datenerfassung (Autor wird nicht gespeichert)"
+    reporttype-location:
+      type: boolean
+      example: true
+      description: "Adresse mit erfassen"
+    reporttype-vehicle:
+      type: boolean
+      example: true
+      deprecated: true
+    reporttype-skip_empty:
+      type: boolean
+      example: true
+      description: "Leere Eingabefelder in der Auswertung ausblenden"
+    reporttype-pdf_layout:
+      type: string
+      enum: [table, list]
+      description: "Gibt das aktuelle PDF Layout an"
+    reporttype-user_cluster_relation_id:
+      type: number
+      description: "Benutzer ID der Einheit"
+    reporttype-cluster_use_vehicle_id:
+      type: number
+      deprecated: true
+    reporttype-status:
+      type: number
+      description: "Status (0=Ungelesen, 1=Gelesen, 2=In Bearbeitung, 3=Nachkontroller, 4=Abgeschlossen, 5=Archiviert, 6=Weitergeleitet)"
+    reporttype-attachment_count:
+      type: number
+      description: "Anzahl der Dateianhänge"
+    reporttype-attachment:
+      type: array
+      items:
+        type: object
+    reporttype-lat:
+      type: number
+      format: float
+      description: "Koordinate Breitengrad"
+      example: 53.58174
+    reporttype-lng:
+      type: number
+      format: float
+      description: "Koordinate Längengrad"
+      example: 6.66688
+    reporttype-address:
+      type: string
+      description: "Eingegebene Adresse"
+    reporttype-deleted:
+      type: integer
+      example: 0
+      description: "Gelöscht Status des Eintrags"
+
+    report-id:
+      type: string
+      description: "ID der Formulareingabe"
+    report-address:
+      type: string
+      description: "Eingegebene Adresse"
+      example: "Vohwinkeler Str. 58, 42329 Wuppertal"
+    report-attachment:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: number
+          file_id:
+            type: number
+          cluster_id:
+            type: number
+          name:
+            type: number
+          mime_type:
+            type: number
+          extension:
+            type: number
+          size:
+            type: number
+          file_reference_id:
+            type: number
+          encrypted:
+            type: number
+          encryption_iv:
+            type: number
+          ts_create:
+            type: number
+
+    fields:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: string
+            example: "10f46fc9-5771-47cb-a134-125a71c0aa94"
+            description: "Eindeutige Eingabefeld ID"
+          name:
+            type: string
+            example: "Was wurde beschädigt?"
+            description: "Eingabefeldbezeichnung"
+          type:
+            type: string
+            enum: [text, textinput,textarea, checkbox, radio, selectbox, number,float,date,datetime,time,select_person,checkbox_person,select_vehicle,checkbox_vehicle,headline]
+            example: "radio"
+            description: "Eingabefeldtyp"
+          options:
+            type: array
+            items:
+              type: object
+              properties:
+                id:
+                  type: string
+                  example: "d8ee4ef9-e524-4811-9a10-ca4c2bf5f504"
+                  description: "Eindeutige ID"
+                name:
+                  type: string
+                  description: "Bezeichnung"
+          required:
+            type: string
+            example: "1"
+            description: "Das Feld ist mit 1 ein Pflichtfeld"

@@ -1,0 +1,363 @@
+openapi: 3.0.1
+info:
+  title: DIVERA 24/7 RESTful Webservice für Nachrichten im Messenger
+  description: "Die API von DIVERA 24/7 bietet zahlreiche Möglichkeiten, um eigene Dienste anzubinden und Aktionen auszulösen. Für Testzwecke empfehlen wir Ihnen, eine separate Einheit anzulegen. Testeinheiten von zahlenden Kunden werden auf Nachfrage kostenfrei hochgestuft."
+  version: 4.1.0
+servers:
+  - url: https://app.divera247.com
+tags:
+  - name: CRUD
+    description: Die wichtigsten Methoden zum Erstellen, Bearbeiten, Archivieren und Löschen von Nachrichten
+paths:
+  /api/v2/messages:
+    get:
+      tags:
+      - CRUD
+      summary: Methode zum Abrufen aller nicht archivierten Nachrichten
+      responses:
+        200:
+          description: successful
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      items:
+                        type: object
+                        description: Liste der einzelnen Nachrichten nach ID
+                        additionalProperties:
+                          $ref: '#/components/schemas/message-result'
+                      sorting:
+                        type: array
+                        description: Reihenfolge der Nachrichten, absteigend
+                        items:
+                          type: integer
+                  ucr:
+                    type: integer
+                    description: ID der UserClusterRelation im aktuellen Request
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+        404:
+          description: Objekt nicht gefunden oder Zugriff nicht gestattet
+          content: {}
+      security:
+      - Personal-API-Accesskey: []
+    post:
+      tags:
+      - CRUD
+      summary: Methode zum Erstellen einer neuen Nachricht
+      requestBody:
+        description: Parameter im JSON-Format
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/message-input'
+      responses:
+        200:
+          description: successful
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/message-result'
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+        404:
+          description: Objekt nicht gefunden oder Zugriff nicht gestattet
+          content: {}
+      security:
+      - Personal-API-Accesskey: []
+  /api/v2/messages/{id}:
+    get:
+      tags:
+      - CRUD
+      summary: Methode zum Abrufen einer Nachricht
+      parameters:
+      - name: id
+        in: path
+        description: ID der Nachricht
+        required: true
+        schema:
+          type: integer
+      responses:
+        200:
+          description: successful
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/message-result'
+                  ucr:
+                    type: integer
+                    description: ID der UserClusterRelation im aktuellen Request
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+        404:
+          description: Objekt nicht gefunden oder Zugriff nicht gestattet
+          content: {}
+      security:
+      - Personal-API-Accesskey: []
+    put:
+      tags:
+      - CRUD
+      summary: Methode zum Bearbeiten der Nachricht
+      parameters:
+      - name: id
+        in: path
+        description: ID der Nachricht
+        required: true
+        schema: {}
+      requestBody:
+        description: Parameter im JSON-Format
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/message-input'
+        required: true
+      responses:
+        200:
+          description: successful
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/message-result'
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+        404:
+          description: Objekt nicht gefunden oder Zugriff nicht gestattet
+          content: {}
+      security:
+      - Personal-API-Accesskey: []
+    delete:
+      tags:
+      - CRUD
+      summary: Methode zum Löschen der Nachricht
+      parameters:
+      - name: id
+        in: path
+        description: ID der Nachricht
+        required: true
+        schema: {}
+      responses:
+        200:
+          description: successful
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/success'
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+        404:
+          description: Objekt nicht gefunden oder Zugriff nicht gestattet
+          content: {}
+      security:
+      - Personal-API-Accesskey: []
+  /api/v2/messages/archive/{id}:
+    post:
+      tags:
+      - CRUD
+      summary: Methode zum Archivieren bzw. Verbergen der Nachricht
+      parameters:
+      - name: id
+        in: path
+        description: ID der Nachricht
+        required: true
+        schema: {}
+      responses:
+        200:
+          description: successful
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/success'
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+        404:
+          description: Objekt nicht gefunden oder Zugriff nicht gestattet
+          content: {}
+      security:
+      - Personal-API-Accesskey: []
+  /api/v2/messages/attachment/{id}:
+    post:
+      tags:
+      - CRUD
+      summary: Methode zum Hinzufügen eines Anhangs
+      parameters:
+      - name: id
+        in: path
+        description: ID der Nachricht
+        required: true
+        schema: {}
+
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - Attachment[upload]
+                - Attachment[title]
+                - Attachment[description]
+              properties:
+                Attachment[upload]:
+                  description: Der Anhang als binary-string
+                  type: string
+                Attachment[title]:
+                  description: Titel des Anhangs
+                  type: string
+                Attachment[description]:
+                  description: Beschreibung des Anhangs
+                  type: string
+      responses:
+        200:
+          description: successful
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/success'
+        403:
+          description: Accesskey fehlt oder ungültig
+          content: {}
+        404:
+          description: Objekt nicht gefunden oder Zugriff nicht gestattet
+          content: {}
+      security:
+      - Personal-API-Accesskey: []
+
+components:
+  schemas:
+
+    success:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: TRUE
+        data:
+          type: object
+        ucr:
+          type: integer
+          description: ID der UserClusterRelation im aktuellen Request
+
+    message-input:
+      type: object
+      properties:
+        Message:
+          type: object
+          required:
+            - message_channel_id
+          properties:
+            message_channel_id:
+              type: integer
+              description: ID des Kanals
+            parent_id:
+              type: integer
+              description: ID der vorausgehenden Nachricht um innerhalb eines Threads zu antworten, beschränkt auf eine Verschachtelungsebene (die vorausgehende Nachricht muss selbst parent_id = 0 aufweisen)
+            text:
+              type: string
+              example: Werde Softwarewareentwickler bei DIVERA ;-)
+              description: Text
+            uploads:
+              type: string
+              description: Datei-Uploads als Binary (Voraussetzung für Anhänge sind die kostenpflichtigen Zusatzmodule Messenger und Cloud)
+              example: Binary
+
+    message-result:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 123
+          description: ID/Primärschlüssel
+        message_channel_id:
+          type: integer
+          description: ID des Kanals
+        parent_id:
+          type: integer
+          description: ID der vorausgehenden Nachricht (parent_id ist der Beginn eines Threads)
+        author_id:
+          type: integer
+          example: 123456789
+          description: ID des Nutzers (UserClusterRelation)
+        text:
+          type: string
+          example: Jetzt bewerben! Mehr Infos unter divera247.com/karriere
+          description: Text
+        attachment_count:
+          type: integer
+          description: Anzahl der Anhänge
+        attachments:
+          type: array
+          items:
+            type: object
+            required:
+              - id
+            properties:
+              id:
+                type: integer
+                description: ID des Anhangs
+              file_reference_id:
+                type: integer
+                description: ID der FileReference
+              foreign_type:
+                type: string
+                description: Typ des zugehörigen Objekts
+              foreign_id:
+                type: integer
+                description: ID des zugehörigen Objekts
+              author_id:
+                type: integer
+                description: Urheber/Absender des Anhangs
+              title:
+                type: string
+                description: Dateiname
+          description: Anhänge der Nachricht
+        messages:
+          type: array
+          items:
+            type: integer
+          description: IDs der untergeordneten Nachrichten (Thread)
+        hidden:
+          type: boolean
+          description: Entwurf
+        deleted:
+          type: boolean
+          description: Gelöscht/Archiviert
+        ts_create:
+          type: integer
+          description: UNIX-Timestamp des Erstelldatums
+        ts_update:
+          type: integer
+          description: UNIX-Timestamp zuletzt bearbeitet
+
+
+  securitySchemes:
+    Personal-API-Accesskey:
+      type: apiKey
+      name: accesskey
+      in: query
