@@ -2,12 +2,10 @@
 
 from __future__ import annotations
 
-import pytest
-import pytest_httpx
-from pydantic import BaseModel
-from tests.v2._helpers import load_v2_json
+from typing import TYPE_CHECKING
 
-from divera247.client import Divera247Client
+import pytest
+
 from divera247.v2.endpoints import MessageChannelEndpoint
 from divera247.v2.models.alarm import SuccessResponse
 from divera247.v2.models.message_channel import (
@@ -19,10 +17,18 @@ from divera247.v2.models.message_channel import (
     MessageSortingResponse,
     MessagesResponse,
 )
+from tests.v2._helpers import load_v2_json
+
+if TYPE_CHECKING:
+    import pytest_httpx
+    from pydantic import BaseModel
+
+    from divera247.client import Divera247Client
 
 
 @pytest.fixture
 def message_channel_endpoint(api_client: Divera247Client) -> MessageChannelEndpoint:
+    """Provide ``MessageChannelEndpoint`` using the shared mock client."""
     return MessageChannelEndpoint(api_client)
 
 
@@ -48,6 +54,7 @@ def message_channel_endpoint(api_client: Divera247Client) -> MessageChannelEndpo
     ],
 )
 def test_message_channel_fixture_parses(filename: str, model: type[BaseModel]) -> None:
+    """Example JSON must parse with the expected Pydantic model."""
     model.model_validate(load_v2_json('message-channel', filename))
 
 
@@ -55,6 +62,7 @@ async def test_get_message_channels(
     message_channel_endpoint: MessageChannelEndpoint,
     httpx_mock: pytest_httpx.HTTPXMock,
 ) -> None:
+    """GET message channels returns success."""
     httpx_mock.add_response(json=load_v2_json('message-channel', 'get_message-channels_response.json'))
     response = await message_channel_endpoint.get_message_channels()
     assert response.success is True

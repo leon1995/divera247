@@ -2,12 +2,10 @@
 
 from __future__ import annotations
 
-import pytest
-import pytest_httpx
-from pydantic import BaseModel
-from tests.v2._helpers import EXAMPLE_ID, load_v2_json
+from typing import TYPE_CHECKING
 
-from divera247.client import Divera247Client
+import pytest
+
 from divera247.v2.endpoints import NewsEndpoint
 from divera247.v2.models.alarm import SuccessResponse
 from divera247.v2.models.news import (
@@ -17,10 +15,18 @@ from divera247.v2.models.news import (
     NewsSingleResponse,
     ReachResponse,
 )
+from tests.v2._helpers import EXAMPLE_ID, load_v2_json
+
+if TYPE_CHECKING:
+    import pytest_httpx
+    from pydantic import BaseModel
+
+    from divera247.client import Divera247Client
 
 
 @pytest.fixture
 def news_endpoint(api_client: Divera247Client) -> NewsEndpoint:
+    """Provide ``NewsEndpoint`` using the shared mock client."""
     return NewsEndpoint(api_client)
 
 
@@ -45,16 +51,19 @@ def news_endpoint(api_client: Divera247Client) -> NewsEndpoint:
     ],
 )
 def test_news_fixture_parses(filename: str, model: type[BaseModel]) -> None:
+    """Example JSON must parse with the expected Pydantic model."""
     model.model_validate(load_v2_json('news', filename))
 
 
 async def test_get_news(news_endpoint: NewsEndpoint, httpx_mock: pytest_httpx.HTTPXMock) -> None:
+    """GET news returns success."""
     httpx_mock.add_response(json=load_v2_json('news', 'get_news_response.json'))
     response = await news_endpoint.get_news()
     assert response.success is True
 
 
 async def test_download_news(news_endpoint: NewsEndpoint, httpx_mock: pytest_httpx.HTTPXMock) -> None:
+    """Download news returns raw bytes from mock."""
     payload = b'%PDF-1.4\n%\xe2\xe3\xcf\xd3\n'
     httpx_mock.add_response(content=payload)
     content = await news_endpoint.download_news(EXAMPLE_ID)

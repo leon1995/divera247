@@ -2,12 +2,10 @@
 
 from __future__ import annotations
 
-import pytest
-import pytest_httpx
-from pydantic import BaseModel
-from tests.v2._helpers import EXAMPLE_ID, load_v2_json
+from typing import TYPE_CHECKING
 
-from divera247.client import Divera247Client
+import pytest
+
 from divera247.v2.endpoints import EventEndpoint
 from divera247.v2.models.alarm import SuccessResponse
 from divera247.v2.models.event import (
@@ -17,10 +15,18 @@ from divera247.v2.models.event import (
     EventsResponse,
     ReachResponse,
 )
+from tests.v2._helpers import EXAMPLE_ID, load_v2_json
+
+if TYPE_CHECKING:
+    import pytest_httpx
+    from pydantic import BaseModel
+
+    from divera247.client import Divera247Client
 
 
 @pytest.fixture
 def event_endpoint(api_client: Divera247Client) -> EventEndpoint:
+    """Provide ``EventEndpoint`` using the shared mock client."""
     return EventEndpoint(api_client)
 
 
@@ -45,10 +51,12 @@ def event_endpoint(api_client: Divera247Client) -> EventEndpoint:
     ],
 )
 def test_event_fixture_parses(filename: str, model: type[BaseModel]) -> None:
+    """Example JSON must parse with the expected Pydantic model."""
     model.model_validate(load_v2_json('event', filename))
 
 
 async def test_get_events(event_endpoint: EventEndpoint, httpx_mock: pytest_httpx.HTTPXMock) -> None:
+    """GET events returns parsed payload."""
     httpx_mock.add_response(json=load_v2_json('event', 'get_events_response.json'))
     response = await event_endpoint.get_events()
     assert response.success is True
@@ -56,6 +64,7 @@ async def test_get_events(event_endpoint: EventEndpoint, httpx_mock: pytest_http
 
 
 async def test_download_event(event_endpoint: EventEndpoint, httpx_mock: pytest_httpx.HTTPXMock) -> None:
+    """Download event returns raw bytes from mock."""
     payload = b'%PDF-1.4\n%\xe2\xe3\xcf\xd3\n'
     httpx_mock.add_response(content=payload)
     content = await event_endpoint.download_event(EXAMPLE_ID)
