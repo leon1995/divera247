@@ -1,0 +1,7 @@
+{
+  "Alarm": {
+    "closed": true,
+    "report": "string",
+    "ts": 0
+  }
+}

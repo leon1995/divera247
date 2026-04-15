@@ -3,14 +3,9 @@
 These models map to the schemas defined in ``api_v2_using-vehicle-crew.yaml``.
 """
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
+from collections.abc import Sequence
 
 from pydantic import BaseModel, Field
-
-if TYPE_CHECKING:
-    from collections.abc import Sequence
 
 
 class UsingVehicleCrewCrew(BaseModel):

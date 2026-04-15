@@ -1,0 +1,16 @@
+{
+    "success": true,
+    "data": {
+        "user": {
+            "access_token": "string",
+            "autologin": true,
+            "auth_key": "string",
+            "default_user_cluster_relation": 0
+        },
+        "ucr": {},
+        "errors": {
+            "username": "string",
+            "password": "string"
+        }
+    }
+}

@@ -1,0 +1,9 @@
+[
+    {
+        "title": "Depesche",
+        "description": "Fax-Depesche für die Feuerwehr",
+        "filename": "dateiname.pdf",
+        "content_type": "application/pdf",
+        "file_content": "CiAgeyB1cmw6ICdkb2NzL2FwaV92Ml9hdHRhY2htZW50LnlhbWwnLCBuYW1lOiAnYXBpL3YyL2F0dGFjaG1lbnQnIH0sCiAgeyB1cmw6ICdkb2NzL2FwaV92Ml9kYXNoYm9hcmQueWFtbCcsIG5hbWU6ICdhcGkvdjIvZGFzaGJvYXJkJyB9LAogIHsgdXJsOiAnZG9jcy9hcGlfdjJfZmlsZS55YW1sJywgbmFtZTogJ2FwaS92Mi9maWxlJyB9LAogICB7IHVybDogJ2RvY3MvYXBpX3YyX3Bhc3N3b3JkLnlhbWwnLCBuYW1lOiAnYXBpL3YyL3Bhc3N3b3JkJyB9LAoKIAogIAogIAogIAoK"
+    }
+]

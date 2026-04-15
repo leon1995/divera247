@@ -1,0 +1,79 @@
+{
+    "success": true,
+    "data": {
+        "id": 123,
+        "foreign_type": "alarm|news|event",
+        "foreign_id": "2019-1023",
+        "cluster_id": 123456789,
+        "author_id": 123456789,
+        "first_message_id": 0,
+        "last_message_id": 0,
+        "title": "Technik-Team",
+        "description": "Absprachen zu Gebäude, Fuhrpark und Gerätschaften",
+        "access_all": true,
+        "entities": {
+            "cluster": [
+                0
+            ],
+            "group": [
+                0
+            ],
+            "user_cluster_relation": [
+                0
+            ]
+        },
+        "config": {
+            "default": {
+                "editable": false,
+                "notification": true,
+                "writable": true,
+                "attachable": true,
+                "access_earlier_messages": true,
+                "access_start": 0,
+                "access_expire": 0,
+                "ts_access_start": 0,
+                "ts_access_expire": 0
+            }
+        },
+        "ucr_access": {
+            "1": {
+                "user_cluster_relation_id": 1,
+                "access": 1,
+                "access_earlier_messages": 0,
+                "attachable": true,
+                "confirmed": 0,
+                "editable": false,
+                "notification": true,
+                "silent": false,
+                "ts_access_expire": 0,
+                "ts_access_start": 0,
+                "writable": true,
+                "ts_create": 123456789
+            }
+        },
+        "self_access": {
+            "editable": true,
+            "writable": true,
+            "attachable": true,
+            "notification": true,
+            "access": true,
+            "access_start": true,
+            "access_expire": true,
+            "access_earlier_messages": true,
+            "ts_access_start": 0,
+            "ts_access_expire": 0,
+            "ts_create": 0
+        },
+        "private_mode": true,
+        "editable": true,
+        "ts_publish": 0,
+        "archive": true,
+        "ts_archive": 0,
+        "delete": true,
+        "ts_delete": 0,
+        "ts_create": 0,
+        "ts_update": 0,
+        "ts_last_message": 0
+    },
+    "ucr": 0
+}

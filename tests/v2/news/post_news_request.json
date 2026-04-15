@@ -1,0 +1,70 @@
+{
+    "News": {
+        "foreign_id": "2019-1023",
+        "title": "Neue Dienstanweisung",
+        "text": "Rückwärtsfahren nur mit Einweiser",
+        "address": "Raum 1.23",
+        "survey": true,
+        "private_mode": true,
+        "notification_type": 0,
+        "send_push": true,
+        "send_sms": true,
+        "send_call": true,
+        "send_mail": true,
+        "send_pager": true,
+        "ts_publish": 0,
+        "archive": true,
+        "ts_archive": 0,
+        "cluster": {
+            "123": {
+                "notification_type": 2
+            },
+            "456": {
+                "notification_type": 3
+            },
+            "789": {
+                "notification_type": 4
+            }
+        },
+        "group": [
+            1,
+            2,
+            3,
+            4
+        ],
+        "user_cluster_relation": [
+            1,
+            2,
+            3,
+            4
+        ]
+    },
+    "instructions": {
+        "cluster": {
+            "mapping": "id"
+        },
+        "group": {
+            "mapping": "id"
+        },
+        "user_cluster_relation": {
+            "mapping": "id"
+        }
+    },
+    "NewsSurvey": {
+        "title": "Mit wie vielen Personen nehmt ihr am Sommerfest teil?",
+        "show_result_count": 0,
+        "show_result_names": 0,
+        "multiple_answers": true,
+        "custom_answers": true,
+        "response_until": true,
+        "ts_response": 0,
+        "answers": [
+            "string"
+        ],
+        "sorting": [
+            "string",
+            0
+        ],
+        "uploads": "Binary"
+    }
+}

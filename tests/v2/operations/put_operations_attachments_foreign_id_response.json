@@ -1,0 +1,10 @@
+[
+    {
+        "id": 42,
+        "author_id": 42,
+        "title": "Depesche",
+        "description": "Fax-Depesche für die Feuerwehr",
+        "filename": "dateiname.pdf",
+        "content_type": "application/pdf"
+    }
+]

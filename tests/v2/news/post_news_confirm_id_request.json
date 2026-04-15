@@ -1,0 +1,11 @@
+{
+    "NewsSurvey": {
+        "id": 1,
+        "note": "bin dabei"
+    },
+    "NewsSurveyAnswer": {
+        "id": 1,
+        "checked": true,
+        "custom_answer": false
+    }
+}

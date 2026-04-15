@@ -3,20 +3,13 @@
 These models map to the schemas defined in ``api_v2_reporttype.yaml``.
 """
 
-from __future__ import annotations
+from collections.abc import Mapping, Sequence
 
-from typing import TYPE_CHECKING
-
-from pydantic import BaseModel, ConfigDict, Field
-
-if TYPE_CHECKING:
-    from collections.abc import Mapping, Sequence
+from pydantic import BaseModel, Field
 
 
 class ReporttypeFieldOption(BaseModel):
     """Option in reporttype field."""
-
-    model_config = ConfigDict(extra='allow')
 
     id: str | None = Field(default=None, description='Eindeutige ID')
     name: str | None = Field(default=None, description='Bezeichnung')
@@ -24,8 +17,6 @@ class ReporttypeFieldOption(BaseModel):
 
 class ReporttypeField(BaseModel):
     """Field in reporttype."""
-
-    model_config = ConfigDict(extra='allow')
 
     id: str | None = Field(default=None, description='Eindeutige Eingabefeld ID')
     name: str | None = Field(default=None, description='Eingabefeldbezeichnung')
@@ -42,8 +33,6 @@ class ReporttypeField(BaseModel):
 
 class ReporttypeResult(BaseModel):
     """Reporttype result schema."""
-
-    model_config = ConfigDict(extra='allow')
 
     id: int | None = Field(default=None, description='Formular ID')
     name: str | None = Field(default=None, description='Formularname')
@@ -90,8 +79,6 @@ class ReporttypeSingleResponse(BaseModel):
 class ReportItem(BaseModel):
     """Report item in reports list."""
 
-    model_config = ConfigDict(extra='allow')
-
     id: str | None = Field(default=None, description='ID der Formulareingabe')
     cluster_id: int | None = Field(default=None, description='ID der Einheit')
     user_cluster_relation_id: int | None = Field(default=None, description='Benutzer ID')
@@ -132,8 +119,6 @@ class ReportsResponse(BaseModel):
 class ReportInputReport(BaseModel):
     """Report object for POST /api/v2/reports."""
 
-    model_config = ConfigDict(extra='allow')
-
     reporttype_id: int = Field(description='Formular ID')
     address: str | None = Field(default=None, description='Adresse')
     cluster_use_vehicle_id: int | None = Field(default=None, description='Fahrzeug ID')
@@ -151,15 +136,15 @@ class ReportInput(BaseModel):
     Report: ReportInputReport = Field(description='Report data')
 
 
-class ReportStatusPayload(BaseModel):
-    """Request body for POST /api/v2/reports/{id}/status."""
-
-    Report: ReportStatusReport = Field(description='Status update')
-
-
 class ReportStatusReport(BaseModel):
     """Report status for POST /api/v2/reports/{id}/status."""
 
     status: int = Field(
         description='Status (0-6)',
     )
+
+
+class ReportStatusPayload(BaseModel):
+    """Request body for POST /api/v2/reports/{id}/status."""
+
+    Report: ReportStatusReport = Field(description='Status update')

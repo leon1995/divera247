@@ -1,0 +1,49 @@
+{
+    "ucr": 101,
+    "reporttype": {
+        "id": 112,
+        "name": "Meldeformular Sachbeschädigung",
+        "version": 2
+    },
+    "data": [
+        {
+            "id": "string",
+            "cluster_id": 247,
+            "coordinates": {
+                "lat": 53.58174,
+                "lng": 6.66688
+            },
+            "status": 0,
+            "deleted": 0,
+            "ts_create": {
+                "date": "string",
+                "timezone_type": 0,
+                "timezone": "string"
+            },
+            "reporttype_version": 0,
+            "attachment_count": 0,
+            "fields": {
+                "...item": {
+                    "name": "string",
+                    "value": "string",
+                    "type": "string"
+                },
+                "_version": {
+                    "name": "string",
+                    "value": 0,
+                    "type": "string"
+                },
+                "_ts_create": {
+                    "name": "string",
+                    "value": "string",
+                    "type": "string"
+                },
+                "_user": {
+                    "name": "string",
+                    "value": "string",
+                    "type": "string"
+                }
+            }
+        }
+    ]
+}

@@ -1,0 +1,85 @@
+{
+    "success": true,
+    "data": {
+        "id": 123,
+        "foreign_id": "2019-1023",
+        "author_id": 123456789,
+        "date": 0,
+        "title": "Neue Dienstanweisung",
+        "text": "Rückwärtsfahren nur mit Einweiser",
+        "address": "Raum 1.23",
+        "cluster": [
+            0
+        ],
+        "group": [
+            0
+        ],
+        "user_cluster_relation": [
+            0
+        ],
+        "private_mode": true,
+        "notification_type": 0,
+        "send_push": true,
+        "send_sms": true,
+        "send_call": true,
+        "send_mail": true,
+        "send_pager": true,
+        "survey": true,
+        "surveys": [
+            {
+                "id": 0,
+                "title": "Mit wie vielen Personen nehmt ihr am Sommerfest teil?",
+                "show_result_count": 0,
+                "show_result_names": 0,
+                "access_count": true,
+                "access_names": true,
+                "multiple_answers": true,
+                "custom_answers": true,
+                "response_until": true,
+                "ts_response": 0,
+                "answers": [
+                    {
+                        "id": 0,
+                        "title": "ja",
+                        "note": "weiß noch nicht",
+                        "answeredcount": 0,
+                        "answeredlist": [
+                            0
+                        ],
+                        "custom_answers": [
+                            {
+                                "id": 0,
+                                "ts": 0,
+                                "note": "string"
+                            }
+                        ]
+                    }
+                ],
+                "answerSorting": [
+                    "string",
+                    0
+                ]
+            }
+        ],
+        "new": true,
+        "editable": true,
+        "answerable": true,
+        "hidden": true,
+        "deleted": true,
+        "ucr_adressed": [
+            0
+        ],
+        "ucr_answered": [
+            0
+        ],
+        "ucr_self_addressed": true,
+        "count_recipients": 0,
+        "count_read": 0,
+        "ts_publish": 0,
+        "archive": true,
+        "ts_archive": 0,
+        "ts_create": 0,
+        "ts_update": 0
+    },
+    "ucr": 0
+}

@@ -3,22 +3,15 @@
 These models map to the schemas defined in ``api_v2_message-channel.yaml``.
 """
 
-from __future__ import annotations
+from collections.abc import Mapping, Sequence
 
-from typing import TYPE_CHECKING
+from pydantic import BaseModel, Field
 
-from pydantic import BaseModel, ConfigDict, Field
-
-if TYPE_CHECKING:
-    from collections.abc import Mapping, Sequence
-
-    from divera247.v2.models.alarm import JsonPayload
+from divera247.v2.models.alarm import JsonPayload
 
 
 class MessageChannelResult(BaseModel):
     """Message channel result schema (message-channel-result)."""
-
-    model_config = ConfigDict(extra='allow')
 
     id: int | None = Field(default=None, description='ID des Kanals')
     foreign_type: str | None = Field(
@@ -92,8 +85,6 @@ class MessageChannelSingleResponse(BaseModel):
 
 class MessageChannelInputMessageChannel(BaseModel):
     """MessageChannel object for create/update."""
-
-    model_config = ConfigDict(extra='allow')
 
     title: str | None = Field(default=None, description='Titel')
     description: str | None = Field(default=None, description='Beschreibung')
@@ -181,8 +172,6 @@ class MessageChannelNotificationPayload(BaseModel):
 class MessagesItemsData(BaseModel):
     """Data for GET /api/v2/message-channels/messages/{id}."""
 
-    model_config = ConfigDict(extra='allow')
-
     items: Mapping[str, JsonPayload] = Field(
         default_factory=dict,
         description='Nachrichten nach ID',
@@ -209,8 +198,6 @@ class MessagesResponse(BaseModel):
 
 class MessageSortingData(BaseModel):
     """Data for GET /api/v2/message-channels/message-sorting/{id}."""
-
-    model_config = ConfigDict(extra='allow')
 
     sorting: Mapping[str, int] = Field(
         default_factory=dict,

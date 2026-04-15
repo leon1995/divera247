@@ -1,0 +1,14 @@
+{
+    "success": true,
+    "data": {
+        "id": 123,
+        "file_reference_id": 765462,
+        "foreign_type": "alarm",
+        "foreign_id": 12345,
+        "type": 0,
+        "title": "Einsatzbericht.xlsx",
+        "description": "Einsatzbericht zur Alarmierung am 01.01.2020 00:03",
+        "encrypted": true,
+        "encryption_iv": "string"
+    }
+}

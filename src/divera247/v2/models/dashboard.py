@@ -3,20 +3,13 @@
 These models map to the schemas defined in ``api_v2_dashboard.yaml``.
 """
 
-from __future__ import annotations
+from collections.abc import Mapping, Sequence
 
-from typing import TYPE_CHECKING
-
-from pydantic import BaseModel, ConfigDict, Field
-
-if TYPE_CHECKING:
-    from collections.abc import Mapping, Sequence
+from pydantic import BaseModel, Field
 
 
 class DashboardResult(BaseModel):
     """Dashboard result schema (dashboard-result)."""
-
-    model_config = ConfigDict(extra='allow')
 
     id: int | None = Field(default=None, description='ID/Primärschlüssel')
     cluster_id: int | None = Field(default=None, description='ID der Einheit')
@@ -63,8 +56,6 @@ class DashboardSingleResponse(BaseModel):
 
 class DashboardInputDashboard(BaseModel):
     """Dashboard object for create/update (dashboard-input.Dashboard)."""
-
-    model_config = ConfigDict(extra='allow')
 
     template_type: int | None = Field(default=None, description='Templatetyp')
     access_type: int | None = Field(default=None, description='Berechtigungstyp')

@@ -3,14 +3,9 @@
 These models map to the schemas defined in ``api_v2_using-vehicle-property.yaml``.
 """
 
-from __future__ import annotations
+from collections.abc import Sequence
 
-from typing import TYPE_CHECKING
-
-from pydantic import BaseModel, ConfigDict, Field
-
-if TYPE_CHECKING:
-    from collections.abc import Sequence
+from pydantic import BaseModel, Field
 
 
 class UsingVehiclePropertyPayload(BaseModel):
@@ -18,8 +13,6 @@ class UsingVehiclePropertyPayload(BaseModel):
 
     LATLNG is the fixed param; additional properties vary by cluster setup.
     """
-
-    model_config = ConfigDict(extra='allow')
 
     LATLNG: Sequence[float] = Field(
         description='[Längengrad, Breitengrad]',

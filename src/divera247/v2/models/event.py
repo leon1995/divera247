@@ -3,22 +3,15 @@
 These models map to the schemas defined in ``api_v2_event.yaml``.
 """
 
-from __future__ import annotations
+from collections.abc import Mapping, Sequence
 
-from typing import TYPE_CHECKING
+from pydantic import BaseModel, Field
 
-from pydantic import BaseModel, ConfigDict, Field
-
-if TYPE_CHECKING:
-    from collections.abc import Mapping, Sequence
-
-    from divera247.v2.models.alarm import JsonPayload
+from divera247.v2.models.alarm import JsonPayload
 
 
 class EventResult(BaseModel):
     """Event result schema (event-result)."""
-
-    model_config = ConfigDict(extra='allow')
 
     id: int | None = Field(default=None, description='ID/Primärschlüssel')
     foreign_id: str | None = Field(default=None, description='Fremdschlüssel')
@@ -119,8 +112,6 @@ class ReachResponse(BaseModel):
 
 class EventInputEvent(BaseModel):
     """Event object for create/update (event-input.Event)."""
-
-    model_config = ConfigDict(extra='allow')
 
     foreign_id: str | None = Field(default=None, description='Fremdschlüssel')
     title: str = Field(description='Titel')

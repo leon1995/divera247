@@ -1,0 +1,34 @@
+{
+    "success": true,
+    "data": {
+        "items": {
+            "112": {
+                "id": 112,
+                "name": "Meldeformular Sachbeschädigung",
+                "description": "Formular zur Meldung von Beschädigungen durch Dritte.",
+                "version": 2,
+                "uploads": true,
+                "anonym": true,
+                "location": true,
+                "fields": [
+                    {
+                        "id": "10f46fc9-5771-47cb-a134-125a71c0aa94",
+                        "name": "Was wurde beschädigt?",
+                        "type": "radio",
+                        "options": [
+                            {
+                                "id": "d8ee4ef9-e524-4811-9a10-ca4c2bf5f504",
+                                "name": "string"
+                            }
+                        ],
+                        "required": "1"
+                    }
+                ]
+            }
+        },
+        "sorting": [
+            654
+        ]
+    },
+    "ucr": 101
+}

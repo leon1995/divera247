@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 # JSON-serializable types for dynamic API payloads (avoids Any)
 # Uses object as values since reach/success payloads have nested structures
@@ -181,8 +181,6 @@ class AlarmResult(BaseModel):
 
     Structure returned by GET /api/v2/alarms, /api/v2/alarms/{id}, etc.
     """
-
-    model_config = ConfigDict(extra='allow')
 
     id: int | None = Field(default=None, description='ID/Primärschlüssel')
     foreign_id: str | None = Field(
@@ -380,8 +378,6 @@ class AlarmResult(BaseModel):
 class AlarmClusterConfig(BaseModel):
     """Per-cluster config for alarm-input.Alarm.cluster (PRO, notification_type=1)."""
 
-    model_config = ConfigDict(extra='allow')
-
     notification_type: int = Field(
         description='Empfänger-Auswahl innerhalb der Untereinheit (2-4)',
     )
@@ -389,8 +385,6 @@ class AlarmClusterConfig(BaseModel):
 
 class AlarmInputAlarm(BaseModel):
     """Alarm object for create/update (alarm-input.Alarm)."""
-
-    model_config = ConfigDict(extra='allow')
 
     foreign_id: str | None = Field(
         default=None,

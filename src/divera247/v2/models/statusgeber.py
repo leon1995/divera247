@@ -5,13 +5,11 @@ These models map to the schemas defined in ``api_v2_statusgeber.yaml``.
 
 from __future__ import annotations
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 
 class StatusgeberStatus(BaseModel):
     """Status object for POST /api/v2/statusgeber/set-status."""
-
-    model_config = ConfigDict(extra='allow')
 
     id: int = Field(description='ID des neuen Status')
     vehicle: int | None = Field(

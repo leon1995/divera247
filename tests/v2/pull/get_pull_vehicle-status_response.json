@@ -1,0 +1,20 @@
+{
+    "success": true,
+    "data": [
+        {
+            "id": 75423,
+            "name": "01-LF20-01",
+            "shortname": "LF",
+            "fullname": "Löschgruppenfahrzeug",
+            "fmsstatus": 5,
+            "fmsstatus_id": 5,
+            "fmsstatus_note": "Anfahrt auf Sicht",
+            "fmsstatus_ts": 1690299635,
+            "crew": [
+                {}
+            ],
+            "lat": 0,
+            "lng": 0
+        }
+    ]
+}

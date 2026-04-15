@@ -3,20 +3,13 @@
 These models map to the schemas defined in ``api_v2_message.yaml``.
 """
 
-from __future__ import annotations
+from collections.abc import Mapping, Sequence
 
-from typing import TYPE_CHECKING
-
-from pydantic import BaseModel, ConfigDict, Field
-
-if TYPE_CHECKING:
-    from collections.abc import Mapping, Sequence
+from pydantic import BaseModel, Field
 
 
 class MessageAttachment(BaseModel):
     """Attachment in message-result."""
-
-    model_config = ConfigDict(extra='allow')
 
     id: int | None = Field(default=None, description='ID des Anhangs')
     file_reference_id: int | None = Field(default=None, description='ID der FileReference')
@@ -28,8 +21,6 @@ class MessageAttachment(BaseModel):
 
 class MessageResult(BaseModel):
     """Message result schema (message-result)."""
-
-    model_config = ConfigDict(extra='allow')
 
     id: int | None = Field(default=None, description='ID/Primärschlüssel')
     message_channel_id: int | None = Field(default=None, description='ID des Kanals')

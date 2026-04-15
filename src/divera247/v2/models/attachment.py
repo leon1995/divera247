@@ -4,14 +4,9 @@ These models map to the schemas defined in ``api_v2_attachment.yaml``:
 ``attachment-result`` and the response structures.
 """
 
-from __future__ import annotations
+from collections.abc import Mapping, Sequence
 
-from typing import TYPE_CHECKING
-
-from pydantic import BaseModel, ConfigDict, Field
-
-if TYPE_CHECKING:
-    from collections.abc import Mapping, Sequence
+from pydantic import BaseModel, Field
 
 
 class AttachmentResult(BaseModel):
@@ -20,8 +15,6 @@ class AttachmentResult(BaseModel):
     Structure returned by GET /api/v2/attachments and GET /api/v2/attachments/{id}.
     File download is available at /api/v2/file/open/{id}.
     """
-
-    model_config = ConfigDict(extra='allow')
 
     id: int | None = Field(default=None, description='ID/Primärschlüssel')
     file_reference_id: int | None = Field(

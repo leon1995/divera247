@@ -3,20 +3,13 @@
 These models map to the schemas defined in ``api_v2_using-vehicle.yaml``.
 """
 
-from __future__ import annotations
+from collections.abc import Mapping
 
-from typing import TYPE_CHECKING
-
-from pydantic import BaseModel, ConfigDict, Field
-
-if TYPE_CHECKING:
-    from collections.abc import Mapping
+from pydantic import BaseModel, Field
 
 
 class UsingVehicleSetStatusPayload(BaseModel):
     """Request body for POST /api/v2/using-vehicles/set-status/{id}."""
-
-    model_config = ConfigDict(extra='allow')
 
     status: int | None = Field(
         default=None,
@@ -40,8 +33,6 @@ class UsingVehicleBulkPayload(BaseModel):
     using_vehicles is an object keyed by vehicle identifier (ric, name, etc.)
     with status objects as values.
     """
-
-    model_config = ConfigDict(extra='allow')
 
     using_vehicles: Mapping[str, UsingVehicleSetStatusPayload] = Field(
         default_factory=dict,

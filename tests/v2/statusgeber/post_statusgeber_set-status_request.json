@@ -1,0 +1,12 @@
+{
+    "Status": {
+        "id": 123,
+        "vehicle": 247,
+        "note": "Komme mit dem Fahrrad",
+        "reset_date": 1738752053,
+        "reset_to": 456,
+        "alarm_skip": true,
+        "status_skip_statusplan": true,
+        "status_skip_geofence": true
+    }
+}

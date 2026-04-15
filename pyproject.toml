@@ -1,6 +1,6 @@
 [project]
 name = "divera247"
-version = "0.1.0"
+version = "0.0.0"
 description = "Add your description here"
 readme = "README.md"
 authors = [
@@ -8,6 +8,7 @@ authors = [
 ]
 requires-python = ">=3.13"
 dependencies = [
+    "anyio>=4.13.0",
     "httpx>=0.28.1",
     "pydantic>=2.12.5",
 ]
@@ -19,10 +20,11 @@ build-backend = "uv_build"
 [dependency-groups]
 test = [
     "pytest>=9.0.2",
+    "pytest-httpx>=0.36.0",
 ]
 dev = [
     "ruff>=0.15.1",
-    "ty>=0.0.17",
+    "ty>=0.0.30",
     { include-group = "test" },
 ]
 
@@ -36,6 +38,7 @@ lint.extend-ignore = [
     "ANN401",
     "C408",
     "C409",
+    "COM812",
     "D100",
     "D105",
     "D107",
@@ -73,3 +76,6 @@ max-doc-length = 120 # https://docs.astral.sh/ruff/settings/#max-doc-length
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["D104"]
+
+[tool.pytest.ini_options]
+anyio_mode = "auto"

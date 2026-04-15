@@ -1,0 +1,25 @@
+{
+    "Report": {
+        "reporttype_id": 112,
+        "address": "Vohwinkeler Str. 58, 42329 Wuppertal",
+        "lat": 53.58174,
+        "lng": 6.66688,
+        "fields": [
+            {
+                "id": "10f46fc9-5771-47cb-a134-125a71c0aa94",
+                "name": "Was wurde beschädigt?",
+                "type": "radio",
+                "options": [
+                    {
+                        "id": "d8ee4ef9-e524-4811-9a10-ca4c2bf5f504",
+                        "name": "string"
+                    }
+                ],
+                "required": "1"
+            }
+        ],
+        "uploads": [
+            {}
+        ]
+    }
+}

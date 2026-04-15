@@ -1,0 +1,10 @@
+{
+    "success": true,
+    "data": {
+        "transports": {},
+        "received": {},
+        "viewed": {},
+        "confirmed": {}
+    },
+    "ucr": 0
+}

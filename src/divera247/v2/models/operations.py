@@ -3,14 +3,9 @@
 These models map to the schemas defined in ``api_v2_operations.yaml``.
 """
 
-from __future__ import annotations
+from collections.abc import Sequence
 
-from typing import TYPE_CHECKING
-
-from pydantic import BaseModel, ConfigDict, Field
-
-if TYPE_CHECKING:
-    from collections.abc import Sequence
+from pydantic import BaseModel, Field
 
 
 class OperationCustomItem(BaseModel):
@@ -23,8 +18,6 @@ class OperationCustomItem(BaseModel):
 
 class Operation(BaseModel):
     """Operation schema for create/update (operation)."""
-
-    model_config = ConfigDict(extra='allow')
 
     foreign_id: str | None = Field(
         default=None,
@@ -103,8 +96,6 @@ class OperationFile(BaseModel):
 
 class OperationFileResponse(BaseModel):
     """File response for operation attachments."""
-
-    model_config = ConfigDict(extra='allow')
 
     id: int | None = Field(default=None, description='Id des Anhangs')
     author_id: int | None = Field(default=None, description='Id des Authors')

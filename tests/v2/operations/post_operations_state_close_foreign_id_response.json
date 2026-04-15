@@ -1,0 +1,32 @@
+{
+    "foreign_id": "de1234000000abcdefga00",
+    "number": "2020-00001",
+    "priority": true,
+    "title": "F4 02 Altenheim / Krankenhaus",
+    "text": "Es brennt im Aufzug, Brandgeruch auf der 4. OG",
+    "reporter": "Max Mustermann",
+    "patient": "Max Mustermann",
+    "address": "Musterstr. 1a, 12345 Musterstadt-Musterortsteil",
+    "address_freetext": "Umleitung über Nordstr. durch Sperrung der Hauptstr.",
+    "scene_object": "Altenheim Nord",
+    "lat": 51.12345678,
+    "lng": 6.12345678,
+    "destination": true,
+    "destination_address": "Krankenhausstr. 1a, 12345 Musterstadt-Musterortsteil",
+    "destination_lat": 52.12345678,
+    "destination_lng": 7.12345678,
+    "destination_freetext": "Ausreichend Kapazität im Krankenhaus",
+    "units": "01.ELW.01, 01.HLF20.01, 01.HLF20.02, 01.DL.01, 01.RTW.01",
+    "custom": [
+        {
+            "key": "hydrant-book",
+            "title": "Seite und Planquardrat im Planbuch/Hydrantenbuch",
+            "value": "15 H2"
+        },
+        {
+            "key": "trigger",
+            "title": "Anruferweg",
+            "value": "Call to 19222"
+        }
+    ]
+}

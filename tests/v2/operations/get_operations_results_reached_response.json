@@ -1,0 +1,35 @@
+{
+    "total": {
+        "count": {
+            "read": 42,
+            "received": 50,
+            "addressed": 200
+        },
+        "addressed_user_cluster_relations": [
+            {
+                "id": 1234,
+                "foreign_id": "12345",
+                "ts_received": 1234255,
+                "ts_read": null,
+                "response": {
+                    "status_id": 42,
+                    "freetext": "Testtest"
+                }
+            }
+        ]
+    },
+    "clusters": [
+        {}
+    ],
+    "rics": [
+        {}
+    ],
+    "alarms": [
+        {
+            "cluster_id": 12345,
+            "id": 123455,
+            "foreign_id": "ise123345",
+            "addressed_user_cluster_relations": {}
+        }
+    ]
+}

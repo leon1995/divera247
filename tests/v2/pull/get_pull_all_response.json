@@ -1,0 +1,164 @@
+{
+    "success": true,
+    "data": {
+        "ucr": {
+            "574232": {
+                "id": 574232,
+                "usergroup_id": 523,
+                "cluster_id": 64323,
+                "status_id": 1234,
+                "new_messages": 2,
+                "new_alarms": 1,
+                "name": "Löschzug Musterstadt",
+                "shortname": "LZ 12"
+            }
+        },
+        "ucr_default": 643235,
+        "ucr_active": 574232,
+        "ts": 0,
+        "user": {
+            "firstname": "string",
+            "lastname": "string",
+            "shortname": "string",
+            "email": "string",
+            "emails": {},
+            "status_default": 0,
+            "alarmbehaviour": 0,
+            "alarmsound": 0,
+            "messagesound": 0,
+            "statussound": 0,
+            "hide_name_in_monitor": true,
+            "push_alarm": true,
+            "push_message": true,
+            "push_statuschange": true,
+            "phonenumbers": {},
+            "access": {},
+            "geofences": [],
+            "ts": 0
+        },
+        "alarm": {
+            "items": {},
+            "sorting": [
+                0
+            ],
+            "new": 0,
+            "ts": 0
+        },
+        "news": {
+            "items": {},
+            "sorting": [
+                0
+            ],
+            "new": 0,
+            "ts": 0
+        },
+        "events": {
+            "items": {},
+            "sorting": [
+                0
+            ],
+            "new": 0,
+            "ts": 0
+        },
+        "status": {
+            "status_id": 0,
+            "note": "string",
+            "vehicle": 0,
+            "status_skip_statusplan": true,
+            "status_skip_geofence": true,
+            "status_set_date": 0,
+            "status_reset_date": 0,
+            "status_reset_id": 0,
+            "status_log": [
+                {}
+            ],
+            "status_changes": [
+                {}
+            ],
+            "ts": 0
+        },
+        "statusplan": {
+            "items": {},
+            "sorting": [
+                0
+            ],
+            "categories": [
+                0
+            ],
+            "ts": 0
+        },
+        "cluster": {
+            "id": 574232,
+            "is_root": false,
+            "version_id": 574232,
+            "name": "Löschzug Musterstadt",
+            "shortname": "LZ 12",
+            "status_default": 123,
+            "status_default_overwrite_by_user": false,
+            "address": {},
+            "consumer": {},
+            "consumersorting": [
+                0
+            ],
+            "group": {},
+            "groupsorting": [
+                0
+            ],
+            "alarmcode": {},
+            "alarmcodesorting": [
+                0
+            ],
+            "qualification": {},
+            "qualificationsorting": [
+                0
+            ],
+            "operationrole": {},
+            "operationrolesorting": [
+                0
+            ],
+            "status": {},
+            "statussorting": [
+                0
+            ],
+            "statussorting_alarm": [
+                0
+            ],
+            "statussorting_statusgeber": [
+                0
+            ],
+            "statussorting_statusplaner": [
+                0
+            ],
+            "statussorting_geofence": [
+                0
+            ],
+            "statusplancategory": {},
+            "statusplancategorysorting": [
+                0
+            ],
+            "vehicle": {},
+            "vehiclesorting": [
+                0
+            ],
+            "fms_status": {},
+            "crewtarget": {},
+            "settings": {},
+            "sponsor": {},
+            "reporttypes": {},
+            "ts": 0
+        },
+        "localmonitor": {
+            "items": {},
+            "sorting": [
+                0
+            ],
+            "ts": 0
+        },
+        "monitor": {
+            "1": "string",
+            "2": 0,
+            "3": {},
+            "ts": 0
+        }
+    }
+}

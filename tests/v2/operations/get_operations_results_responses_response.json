@@ -1,0 +1,56 @@
+{
+    "total": {
+        "title": "Gesamt",
+        "slots": [
+            {
+                "title": "5 Min",
+                "description": "5 Minuten",
+                "sum": 6,
+                "tactical": {
+                    "textual": "0/1/5/6",
+                    "components": [
+                        {
+                            "title": "leader_operation",
+                            "description": "Zugführer",
+                            "count": 0
+                        }
+                    ]
+                },
+                "qualifications": [
+                    {
+                        "id": 1,
+                        "title": "AGT",
+                        "description": "Atemschutzgeräteträger",
+                        "count": 3
+                    }
+                ],
+                "user_cluster_relations": [
+                    {
+                        "id": 42,
+                        "ts_response": 123456,
+                        "name": "Maxime Muster",
+                        "status_id": 42,
+                        "status_name": "Ja",
+                        "freetext": "string"
+                    }
+                ]
+            }
+        ]
+    },
+    "clusters": [
+        {
+            "id": 42,
+            "title": "LZ 1",
+            "description": "Feuerwehr LZ 1",
+            "slots": []
+        }
+    ],
+    "rics": [
+        {
+            "id": 91,
+            "title": "1-HLF-11",
+            "description": "HLF RIC Beschreibung",
+            "slots": []
+        }
+    ]
+}

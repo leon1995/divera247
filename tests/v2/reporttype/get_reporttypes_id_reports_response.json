@@ -1,0 +1,43 @@
+{
+    "success": true,
+    "data": {
+        "items": [
+            {
+                "id": "string",
+                "cluster_id": 247,
+                "user_cluster_relation_id": 101,
+                "reporttype_id": 112,
+                "status": 0,
+                "attachment_count": 0,
+                "attachment": [
+                    {}
+                ],
+                "lat": 53.58174,
+                "lng": 6.66688,
+                "address": "string",
+                "fields": [
+                    {
+                        "field": [
+                            {
+                                "id": "10f46fc9-5771-47cb-a134-125a71c0aa94",
+                                "name": "Was wurde beschädigt?",
+                                "type": "radio",
+                                "options": [
+                                    {
+                                        "id": "d8ee4ef9-e524-4811-9a10-ca4c2bf5f504",
+                                        "name": "string"
+                                    }
+                                ],
+                                "required": "1"
+                            }
+                        ],
+                        "value": "d8ee4ef9-e524-4811-9a10-ca4c2bf5f504"
+                    }
+                ],
+                "ts_create": 1702566795
+            }
+        ],
+        "itemcount": 1
+    },
+    "ucr": 101
+}

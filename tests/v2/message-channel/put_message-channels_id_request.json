@@ -1,0 +1,51 @@
+{
+    "MessageChannel": {
+        "title": "Technik-Team",
+        "description": "Absprachen zu Gebäude, Fuhrpark und Gerätschaften",
+        "access_all": true,
+        "entities": {
+            "cluster": [
+                0
+            ],
+            "group": [
+                0
+            ],
+            "user_cluster_relation": [
+                0
+            ]
+        },
+        "config": {
+            "default": {
+                "editable": false,
+                "notification": true,
+                "writable": true,
+                "attachable": true,
+                "access_earlier_messages": true,
+                "access_start": 0,
+                "access_expire": 0,
+                "ts_access_start": 0,
+                "ts_access_expire": 0
+            }
+        },
+        "ucr_access": {
+            "1": {
+                "access": 1,
+                "access_earlier_messages": 0,
+                "attachable": true,
+                "confirmed": 0,
+                "editable": false,
+                "notification": true,
+                "silent": false,
+                "ts_access_expire": 0,
+                "ts_access_start": 0,
+                "user_cluster_relation_id": 1,
+                "writable": true,
+                "ts_create": 123456789
+            }
+        },
+        "private_mode": true,
+        "ts_publish": 0,
+        "ts_archive": 0,
+        "ts_delete": 0
+    }
+}

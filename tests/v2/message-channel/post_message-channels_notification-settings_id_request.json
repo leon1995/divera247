@@ -1,0 +1,9 @@
+{
+    "MessageChannel": {
+        "self_access": {
+            "silent": true,
+            "ts_silent_expire": 0,
+            "ts_silent_start": 0
+        }
+    }
+}

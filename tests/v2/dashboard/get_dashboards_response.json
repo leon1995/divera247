@@ -1,0 +1,35 @@
+{
+    "success": true,
+    "data": {
+        "items": {
+            "additionalProp1": {
+                "id": 123,
+                "cluster_id": 456,
+                "template_type": 1,
+                "access_type": 2,
+                "name": "Alarmmonitor 1. Abmarsch",
+                "config": {}
+            },
+            "additionalProp2": {
+                "id": 123,
+                "cluster_id": 456,
+                "template_type": 1,
+                "access_type": 2,
+                "name": "Alarmmonitor 1. Abmarsch",
+                "config": {}
+            },
+            "additionalProp3": {
+                "id": 123,
+                "cluster_id": 456,
+                "template_type": 1,
+                "access_type": 2,
+                "name": "Alarmmonitor 1. Abmarsch",
+                "config": {}
+            }
+        },
+        "sorting": [
+            123
+        ]
+    },
+    "ucr": 0
+}

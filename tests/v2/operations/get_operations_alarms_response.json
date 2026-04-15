@@ -1,0 +1,36 @@
+[
+    {
+        "id": 123455,
+        "cluster_id": 12345,
+        "operation_id": 1234,
+        "foreign_id": "1244",
+        "ts_create": 121212,
+        "title": "ALAAARM!",
+        "text": "Detailtext...",
+        "groups": [
+            {
+                "id": 12,
+                "title": "AGT"
+            }
+        ],
+        "vehicles": [
+            {
+                "id": 12,
+                "title": "FZ-1",
+                "description": "Fahrzeug 1"
+            }
+        ],
+        "clusters": [
+            {
+                "id": 12,
+                "title": "LZ-1"
+            }
+        ],
+        "user_cluster_relations": [
+            {
+                "id": 112,
+                "foreign_id": "?"
+            }
+        ]
+    }
+]

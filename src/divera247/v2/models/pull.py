@@ -3,26 +3,20 @@
 These models map to the schemas defined in ``api_v2_pull.yaml``.
 """
 
-from __future__ import annotations
+from collections.abc import Mapping, Sequence
+from typing import cast
 
-from typing import TYPE_CHECKING, cast
+from pydantic import BaseModel, Field, field_validator
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
-
-if TYPE_CHECKING:
-    from collections.abc import Mapping, Sequence
-
-    from divera247.v2.models.alarm import AlarmResult
-    from divera247.v2.models.event import EventResult
-    from divera247.v2.models.message import MessageResult
-    from divera247.v2.models.message_channel import MessageChannelResult
-    from divera247.v2.models.news import NewsResult
+from divera247.v2.models.alarm import AlarmResult
+from divera247.v2.models.event import EventResult
+from divera247.v2.models.message import MessageResult
+from divera247.v2.models.message_channel import MessageChannelResult
+from divera247.v2.models.news import NewsResult
 
 
 class UcrEntry(BaseModel):
     """Single UserClusterRelation in pull data."""
-
-    model_config = ConfigDict(extra='allow')
 
     id: int | None = Field(default=None, description='ID der UserClusterRelation')
     usergroup_id: int | None = Field(default=None, description='ID der Benutzergruppe')
@@ -40,15 +34,13 @@ class UcrEntry(BaseModel):
 class PullUser(BaseModel):
     """User settings and permissions in pull data."""
 
-    model_config = ConfigDict(extra='allow')
-
     accesskey: str | None = Field(default=None, description='Zugangsschlüssel')
     firstname: str | None = Field(default=None, description='Vorname')
     lastname: str | None = Field(default=None, description='Nachname')
     shortname: str | None = Field(default=None, description='Initialen')
     email: str | None = Field(default=None, description='Benutzername/Login')
-    emails: Mapping[str, str] | None = Field(
-        default=None,
+    emails: Mapping[str, str] = Field(
+        default_factory=dict,
         description='Eigene E-Mail-Adressen',
     )
     status_default: int | None = Field(
@@ -79,16 +71,16 @@ class PullUser(BaseModel):
         default=None,
         description='Push-Benachrichtigung bei Statusänderung',
     )
-    phonenumbers: Mapping[str, object] | None = Field(
-        default=None,
+    phonenumbers: Mapping[str, object] = Field(
+        default_factory=dict,
         description='Eigene Telefonnummern',
     )
-    access: Mapping[str, object] | None = Field(
-        default=None,
+    access: Mapping[str, object] = Field(
+        default_factory=dict,
         description='Berechtigungen',
     )
-    geofences: Sequence[Mapping[str, object]] | None = Field(
-        default=None,
+    geofences: Sequence[Mapping[str, object]] = Field(
+        default_factory=tuple,
         description='Geofence-Konfiguration',
     )
     onboarding_tour_state: int | None = Field(
@@ -104,8 +96,6 @@ class PullUser(BaseModel):
 class StatusChangeEntry(BaseModel):
     """Single entry in status.status_changes or status.status_log."""
 
-    model_config = ConfigDict(extra='allow')
-
     ts: int | None = Field(default=None, description='UNIX-Timestamp')
     status: int | None = Field(default=None, description='ID des Status')
     note: str | None = Field(default=None, description='Status-Notiz')
@@ -116,8 +106,6 @@ class StatusChangeEntry(BaseModel):
 
 class PullStatusData(BaseModel):
     """Current user status in pull data."""
-
-    model_config = ConfigDict(extra='allow')
 
     status_id: int | None = Field(
         default=None,
@@ -163,8 +151,6 @@ class PullStatusData(BaseModel):
 class PullItemsData(BaseModel):
     """Generic container for items + sorting + ts + new (alarm, news, events, dm)."""
 
-    model_config = ConfigDict(extra='allow')
-
     items: Mapping[str, object] = Field(
         default_factory=dict,
         description='Items by ID',
@@ -179,6 +165,7 @@ class PullItemsData(BaseModel):
         if isinstance(v, dict):
             return cast('Mapping[str, object]', v)
         raise ValueError('items must be dict or empty list')
+
     sorting: Sequence[int] = Field(
         default_factory=tuple,
         description='Reihenfolge aufsteigend',
@@ -226,8 +213,6 @@ class PullDmData(PullItemsData):
 
 class StatusPlanEntry(BaseModel):
     """Single status plan entry in pull data."""
-
-    model_config = ConfigDict(extra='allow')
 
     id: int | None = Field(
         default=None,
@@ -304,8 +289,6 @@ class StatusPlanEntry(BaseModel):
 class PullStatusplanData(BaseModel):
     """Status plan data in pull."""
 
-    model_config = ConfigDict(extra='allow')
-
     items: Mapping[str, StatusPlanEntry] = Field(
         default_factory=dict,
         description='Statusplan-Einträge nach ID',
@@ -326,8 +309,6 @@ class PullStatusplanData(BaseModel):
 
 class LocalMonitorEntry(BaseModel):
     """Single local monitor config in pull data."""
-
-    model_config = ConfigDict(extra='allow')
 
     id: int | None = Field(default=None, description='ID des Monitors')
     name: str | None = Field(default=None, description='Name')
@@ -367,8 +348,6 @@ class LocalMonitorEntry(BaseModel):
 class PullLocalmonitorData(BaseModel):
     """Local monitor config in pull data."""
 
-    model_config = ConfigDict(extra='allow')
-
     items: Mapping[str, LocalMonitorEntry] = Field(
         default_factory=dict,
         description='Monitor-Konfigurationen nach ID',
@@ -386,21 +365,106 @@ class PullLocalmonitorData(BaseModel):
 class PullMonitorData(BaseModel):
     """Personnel availability (monitor) in pull data."""
 
-    model_config = ConfigDict(extra='allow')
-
     ts: int | None = Field(
         default=None,
         description='Letzte Änderung als UNIX-Timestamp',
     )
     cached: bool | None = Field(default=None, description='Aus Cache')
     # Keys "1", "2", "3" etc. are group/category IDs, values are status_id -> count mappings
-    # Use extra='allow' to capture dynamic keys
+
+
+class PullConsumerData(BaseModel):
+    """Consumer/user data in pull cluster data."""
+
+    firstname: str | None = Field(default=None, description='Vorname')
+    lastname: str | None = Field(default=None, description='Nachname')
+    stdformat_name: str | None = Field(
+        default=None,
+        description='Name im Standardformat',
+    )
+    groups: Sequence[int] = Field(
+        default_factory=tuple,
+        description='IDs der Gruppen',
+    )
+    qualifications: Sequence[int] = Field(
+        default_factory=tuple,
+        description='IDs der Qualifikationen',
+    )
+
+
+class PullAddressData(BaseModel):
+    """Address data in pull cluster data."""
+
+    lat: float | None = Field(default=None, description='Breitengrad')
+    lng: float | None = Field(default=None, description='Längengrad')
+    long: float | None = Field(default=None, description='Längengrad (alternativ)')
+    street: str | None = Field(default=None, description='Straße')
+    zip: str | None = Field(default=None, description='Postleitzahl')
+    city: str | None = Field(default=None, description='Stadt')
+    country: str | None = Field(default=None, description='Land')
+    ags: int | None = Field(
+        default=None,
+        description='Amtlicher Gemeindeschlüssel',
+    )
+
+
+class PullQualificationData(BaseModel):
+    """Qualification data in pull cluster data."""
+
+    name: str | None = Field(default=None, description='Name der Qualifikation')
+    shortname: str | None = Field(default=None, description='Abkürzung der Qualifikation')
+
+
+class PullOperationRoleData(BaseModel):
+    """Operation role data in pull cluster data."""
+
+    name: str | None = Field(default=None, description='Name der Einsatzrolle')
+    shortname: str | None = Field(default=None, description='Abkürzung der Einsatzrolle')
+
+
+class PullStatusDefinitionData(BaseModel):
+    """Status definition data in pull cluster data."""
+
+    id: int | None = Field(default=None, description='ID des Status')
+    cluster_id: int | None = Field(default=None, description='ID der Einheit')
+    name: str | None = Field(default=None, description='Name des Status')
+    show_on_alarmmonitor: bool | None = Field(
+        default=None,
+        description='Auf Alarmmonitor anzeigen',
+    )
+    show_on_alarm: bool | None = Field(
+        default=None,
+        description='Bei Alarm anzeigen',
+    )
+    show_on_statusgeber: bool | None = Field(
+        default=None,
+        description='Auf Statusgeber anzeigen',
+    )
+    show_on_statusplaner: bool | None = Field(
+        default=None,
+        description='Auf Statusplaner anzeigen',
+    )
+    show_on_geofence: bool | None = Field(
+        default=None,
+        description='Bei Geofence anzeigen',
+    )
+    color_id: int | None = Field(default=None, description='ID der Farbe')
+    color_hex: str | None = Field(default=None, description='Farbe als Hex')
+    time: int | None = Field(default=None, description='Zeit')
+    sorting: int | None = Field(default=None, description='Sortierung')
+    hidden: bool | None = Field(default=None, description='Versteckt')
+    phonenumber: str | None = Field(default=None, description='Telefonnummer')
+    alias: str | None = Field(default=None, description='Alias')
+
+
+class PullStatusPlanCategoryData(BaseModel):
+    """Status plan category data in pull cluster data."""
+
+    name: str | None = Field(default=None, description='Name der Kategorie')
 
 
 class PullClusterData(BaseModel):
     """Cluster/unit data in pull."""
-
-    model_config = ConfigDict(extra='allow')
 
     id: int | None = Field(default=None, description='ID der Einheit')
     is_root: bool | None = Field(
@@ -421,36 +485,36 @@ class PullClusterData(BaseModel):
         default=None,
         description='Standard-Status kann von Nutzer überschrieben werden',
     )
-    address: Mapping[str, object] | None = Field(
+    address: PullAddressData | None = Field(
         default=None,
         description='Adresse der Einheit',
     )
-    consumer: Mapping[str, object] | None = Field(
-        default=None,
+    consumer: Mapping[str, PullConsumerData] = Field(
+        default_factory=dict,
         description='Stammdaten der Benutzer',
     )
     consumersorting: Sequence[int] | None = Field(
         default=None,
         description='Sortierte IDs der Benutzer',
     )
-    qualification: Mapping[str, object] | None = Field(
-        default=None,
+    qualification: Mapping[str, PullQualificationData] = Field(
+        default_factory=dict,
         description='Qualifikationen',
     )
     qualificationsorting: Sequence[int] | None = Field(
         default=None,
         description='Sortierte Qualifikations-IDs',
     )
-    operationrole: Mapping[str, object] | None = Field(
-        default=None,
+    operationrole: Mapping[str, PullOperationRoleData] = Field(
+        default_factory=dict,
         description='Einsatzrollen',
     )
     operationrolesorting: Sequence[int] | None = Field(
         default=None,
         description='Sortierte Einsatzrollen-IDs',
     )
-    status: Mapping[str, object] | None = Field(
-        default=None,
+    status: Mapping[str, PullStatusDefinitionData] = Field(
+        default_factory=dict,
         description='Status-Definitionen',
     )
     statussorting: Sequence[int] | None = Field(
@@ -461,8 +525,8 @@ class PullClusterData(BaseModel):
     statussorting_statusgeber: Sequence[int] | None = Field(default=None)
     statussorting_statusplaner: Sequence[int] | None = Field(default=None)
     statussorting_geofence: Sequence[int] | None = Field(default=None)
-    statusplancategory: Mapping[str, object] | None = Field(
-        default=None,
+    statusplancategory: Mapping[str, PullStatusPlanCategoryData] = Field(
+        default_factory=dict,
         description='Statusplan-Kategorien',
     )
     statusplancategorysorting: Sequence[int] | None = Field(
@@ -473,8 +537,6 @@ class PullClusterData(BaseModel):
 
 class PullMessageChannelData(BaseModel):
     """Message channels in pull data."""
-
-    model_config = ConfigDict(extra='allow')
 
     items: Mapping[str, MessageChannelResult] = Field(
         default_factory=dict,
@@ -493,22 +555,20 @@ class PullMessageChannelData(BaseModel):
 class PullMessageData(BaseModel):
     """Messages in pull data."""
 
-    model_config = ConfigDict(extra='allow')
-
     items: Mapping[str, MessageResult] = Field(
         default_factory=dict,
         description='Nachrichten nach ID',
     )
-    parents: Mapping[str, int] | None = Field(
-        default=None,
+    parents: Mapping[str, int] = Field(
+        default_factory=dict,
         description='Parent-ID pro Nachricht',
     )
-    updated: Mapping[str, int] | None = Field(
-        default=None,
+    updated: Mapping[str, int] = Field(
+        default_factory=dict,
         description='Aktualisierte Nachrichten (id -> ts)',
     )
-    message_channel: Mapping[str, object] | Sequence[int] | None = Field(
-        default=None,
+    message_channel: Mapping[str, object] | Sequence[int] = Field(
+        default_factory=dict,
         description='Nachrichtenkanäle (ID -> data oder Liste)',
     )
     limit: int | None = Field(
@@ -524,10 +584,8 @@ class PullMessageData(BaseModel):
 class PullData(BaseModel):
     """Data payload for GET /api/v2/pull/all."""
 
-    model_config = ConfigDict(extra='allow')
-
-    ucr: Mapping[str, UcrEntry] | None = Field(
-        default=None,
+    ucr: Mapping[str, UcrEntry] = Field(
+        default_factory=dict,
         description='UserClusterRelations (ucr_id -> entry)',
     )
     ucr_default: int | None = Field(
@@ -601,8 +659,6 @@ class PullAllResponse(BaseModel):
 
 class VehicleStatusItem(BaseModel):
     """Vehicle status item for GET /api/v2/pull/vehicle-status."""
-
-    model_config = ConfigDict(extra='allow')
 
     id: int | None = Field(default=None, description='ID des Fahrzeugs')
     name: str | None = Field(default=None, description='Funkrufname')
