@@ -7,7 +7,7 @@ import pytest_httpx
 from tests.v2._helpers import EXAMPLE_ID
 
 from divera247.client import Divera247Client
-from divera247.v2.endpoints.file import FileEndpoint
+from divera247.v2.endpoints import FileEndpoint
 
 
 @pytest.fixture

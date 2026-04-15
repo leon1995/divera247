@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from tests.v2._helpers import load_v2_json
 
 from divera247.client import Divera247Client
-from divera247.v2.endpoints.attachment import AttachmentEndpoint
+from divera247.v2.endpoints import AttachmentEndpoint
 from divera247.v2.models.alarm import SuccessResponse
 from divera247.v2.models.attachment import AttachmentSingleResponse, AttachmentsResponse
 

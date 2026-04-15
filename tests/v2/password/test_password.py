@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from tests.v2._helpers import load_v2_json
 
 from divera247.client import Divera247Client
-from divera247.v2.endpoints.password import PasswordEndpoint
+from divera247.v2.endpoints import PasswordEndpoint
 from divera247.v2.models.password import PasswordValidatePayload, PasswordValidateResponse
 
 

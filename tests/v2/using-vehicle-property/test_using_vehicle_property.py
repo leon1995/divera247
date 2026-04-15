@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from tests.v2._helpers import EXAMPLE_ID, load_v2_json
 
 from divera247.client import Divera247Client
-from divera247.v2.endpoints.using_vehicle_property import UsingVehiclePropertyEndpoint
+from divera247.v2.endpoints import UsingVehiclePropertyEndpoint
 from divera247.v2.models.using_vehicle_property import UsingVehiclePropertyPayload
 
 

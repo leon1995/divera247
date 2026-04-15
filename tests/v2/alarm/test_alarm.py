@@ -11,7 +11,7 @@ import pytest_httpx
 from pydantic import BaseModel
 
 from divera247.client import Divera247Client
-from divera247.v2.endpoints.alarm import AlarmEndpoint
+from divera247.v2.endpoints import AlarmEndpoint
 from divera247.v2.models.alarm import (
     AlarmInput,
     AlarmSingleResponse,

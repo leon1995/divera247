@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from tests.v2._helpers import load_v2_json
 
 from divera247.client import Divera247Client
-from divera247.v2.endpoints.message_channel import MessageChannelEndpoint
+from divera247.v2.endpoints import MessageChannelEndpoint
 from divera247.v2.models.alarm import SuccessResponse
 from divera247.v2.models.message_channel import (
     MessageChannelActivityPayload,
