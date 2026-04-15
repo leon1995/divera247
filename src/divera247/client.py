@@ -1,12 +1,14 @@
-from collections.abc import Mapping, Sequence
-from types import TracebackType
-from typing import Any, Self
+import contextlib
+import typing
+from collections.abc import AsyncGenerator, Mapping, Sequence
+from typing import Any
 
+import anyio
 import httpx
 from httpx._types import QueryParamTypes
 
 
-class Divera247Client:
+class Divera247Client(anyio.AsyncContextManagerMixin):
     """Divera 24/7 client."""
 
     def __init__(self, access_key: str, base_url: str = 'https://app.divera247.com/api/'):
@@ -14,17 +16,10 @@ class Divera247Client:
         self.access_key = access_key
         self._session = httpx.AsyncClient()
 
-    async def __aenter__(self) -> Self:
-        await self._session.__aenter__()
-        return self
-
-    async def __aexit__(
-        self,
-        exc_type: type[BaseException] | None,
-        exc_value: BaseException | None,
-        traceback: TracebackType | None,
-    ) -> None:
-        await self._session.__aexit__(exc_type, exc_value, traceback)
+    @contextlib.asynccontextmanager
+    async def __asynccontextmanager__(self) -> AsyncGenerator[typing.Self]:
+        async with self._session:
+            yield self
 
     def _merge_params(self, params: QueryParamTypes | None = None) -> httpx.QueryParams:
         return httpx.QueryParams(params or {}).merge({'accesskey': self.access_key})
