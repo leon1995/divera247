@@ -107,6 +107,18 @@ max-doc-length = 120 # https://docs.astral.sh/ruff/settings/#max-doc-length
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["D104"]
+"src/divera247/client.py" = [
+    "PLC0415", # lazy endpoint imports inside cached_property are deliberate (circular import avoidance)
+]
+"tests/**/*.py" = [
+    "FBT001", # test helpers take bool positional args for pytest parametrisation ergonomics
+    "FBT002",
+    "FBT003",
+    "PLR2004", # tests inline status codes / lengths for readability
+    "PT012", # exercising async iterators inside pytest.raises blocks is unavoidable
+    "SLF001", # tests intentionally reach into private helpers
+]
 
 [tool.pytest]
+testpaths = ["tests"]
 anyio_mode = "auto"

@@ -45,7 +45,11 @@ from divera247.websocket.models import (
     UserStatusEvent,
     parse_event,
 )
-from divera247.websocket.session import WebSocketAuthenticationError, subscribe_websocket
+from divera247.websocket.session import (
+    WebSocketAuthenticationError,
+    stream_websocket,
+    subscribe_websocket,
+)
 
 __all__ = [
     'ClusterPullEvent',
@@ -55,5 +59,6 @@ __all__ = [
     'UserStatusEvent',
     'WebSocketAuthenticationError',
     'parse_event',
+    'stream_websocket',
     'subscribe_websocket',
 ]

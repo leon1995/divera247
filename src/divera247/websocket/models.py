@@ -5,7 +5,7 @@ from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Discriminator, Field, Tag, TypeAdapter
 
-from divera247.v2.models.pull import PullStatusData
+from divera247.models.pull import PullStatusData
 
 
 class UserStatusEvent(BaseModel):

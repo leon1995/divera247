@@ -1,18 +1,25 @@
 """Divera 24/7 WebSocket subscription loop.
 
-:func:`subscribe_websocket` opens the Divera push WebSocket, drives the
-``authenticate`` handshake (including ``jwtExpired`` re-auth with a bounded
-retry budget) and yields every business-level event as an async iterator:
+Two entry points are exposed:
 
-.. code-block:: python
-
-    async for event in subscribe_websocket(client, ucr_id=ucr_id):
-        ...
+* :func:`subscribe_websocket` -- single-session async iterator of push events
+  with bounded JWT re-auth. Exits when the server disconnects, so callers in
+  control of their own retry strategy can wrap it as they see fit.
+* :func:`stream_websocket` -- long-running async iterator that transparently
+  reconnects with jittered exponential backoff, re-authenticating on every
+  reconnect. Use this when you want a "just keep me subscribed" loop.
 
 The ``Authorization: Bearer <token>`` value for the ``authenticate`` frame is
 obtained by running the :class:`httpx.Auth` attached to the provided
-:class:`~divera247.client.Divera247Client`. Any auth that sets that header
-works (see :mod:`divera247.auth`).
+:class:`~divera247.client.Divera247Client`. **Only auth flows that set
+exactly that header work** -- any other scheme (Basic, query-param-only, etc.)
+raises :class:`RuntimeError`. All built-in auth classes in
+:mod:`divera247.auth` satisfy this contract.
+
+.. code-block:: python
+
+    async for event in stream_websocket(client, ucr_id=ucr_id):
+        ...
 """
 
 from __future__ import annotations
@@ -20,8 +27,10 @@ from __future__ import annotations
 import contextlib
 import json
 import logging
+import random
 from typing import TYPE_CHECKING, Any
 
+import anyio
 import httpx
 
 try:
@@ -48,8 +57,8 @@ class WebSocketAuthenticationError(RuntimeError):
     """Raised when the Divera WebSocket keeps rejecting our authentication.
 
     Signals a persistent credential/JWT problem that reconnecting will not
-    fix; :func:`subscribe_websocket` therefore propagates this instead of
-    silently looping.
+    fix; :func:`subscribe_websocket` and :func:`stream_websocket` therefore
+    propagate this instead of silently looping.
     """
 
 
@@ -140,6 +149,61 @@ async def subscribe_websocket(
     ws_url: str = 'wss://ws.divera247.com/ws',
     max_auth_attempts: int = 3,
 ) -> AsyncIterator[models.ClusterPullEvent | models.UserStatusEvent | models.UnknownEvent]:
-    """Yield Divera 24/7 WebSocket events indefinitely."""
+    """Yield typed Divera 24/7 WebSocket events from a single session.
+
+    Exits when the underlying socket disconnects (by raising
+    :class:`httpx_ws.WebSocketDisconnect`). If you want transparent
+    reconnection, use :func:`stream_websocket` instead.
+    """
     async for event in _ws_session(client, ucr_id, ws_url, max_auth_attempts):
         yield models.parse_event(event)
+
+
+async def stream_websocket(  # noqa: PLR0913
+    client: Divera247Client,
+    *,
+    ucr_id: int | None = None,
+    ws_url: str = 'wss://ws.divera247.com/ws',
+    max_auth_attempts: int = 3,
+    initial_backoff: float = 1.0,
+    max_backoff: float = 60.0,
+    backoff_factor: float = 2.0,
+    backoff_jitter: float = 0.2,
+) -> AsyncIterator[models.ClusterPullEvent | models.UserStatusEvent | models.UnknownEvent]:
+    """Yield events forever, transparently reconnecting on any disconnect.
+
+    Reconnect delay follows jittered exponential backoff bounded by
+    ``max_backoff``. The counter resets every time a session successfully
+    yields at least one business event, so flapping networks don't starve a
+    client that is otherwise making progress.
+
+    :class:`WebSocketAuthenticationError` is propagated (bad credentials won't
+    get better by retrying), while transport-layer failures are logged and
+    retried.
+    """
+    backoff = initial_backoff
+    while True:
+        delivered = False
+        try:
+            async for event in subscribe_websocket(
+                client,
+                ucr_id=ucr_id,
+                ws_url=ws_url,
+                max_auth_attempts=max_auth_attempts,
+            ):
+                delivered = True
+                yield event
+        except WebSocketAuthenticationError:
+            raise
+        except (httpx_ws.WebSocketDisconnect, httpx_ws.WebSocketNetworkError, httpx.HTTPError) as exc:
+            logger.warning('websocket disconnected (%s); reconnecting in %.1fs', exc, backoff)
+        except Exception:
+            logger.exception('websocket raised an unexpected error; reconnecting in %.1fs', backoff)
+        else:
+            logger.info('websocket ended cleanly; reconnecting in %.1fs', backoff)
+
+        if delivered:
+            backoff = initial_backoff
+        jitter = random.uniform(-backoff_jitter, backoff_jitter) * backoff
+        await anyio.sleep(max(0.0, backoff + jitter))
+        backoff = min(max_backoff, backoff * backoff_factor)
