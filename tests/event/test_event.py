@@ -1,0 +1,71 @@
+"""Event API fixture and endpoint tests."""
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+import pytest
+
+from divera247.endpoints import EventEndpoint
+from divera247.models.alarm import SuccessResponse
+from divera247.models.event import (
+    EventConfirmPayload,
+    EventInput,
+    EventSingleResponse,
+    EventsResponse,
+    ReachResponse,
+)
+from tests._helpers import EXAMPLE_ID, load_v2_json
+
+if TYPE_CHECKING:
+    import pytest_httpx
+    from pydantic import BaseModel
+
+    from divera247.client import Divera247Client
+
+
+@pytest.fixture
+def event_endpoint(api_client: Divera247Client) -> EventEndpoint:
+    """Provide ``EventEndpoint`` using the shared mock client."""
+    return EventEndpoint(api_client)
+
+
+@pytest.mark.parametrize(
+    ('filename', 'model'),
+    [
+        ('post_events_request.json', EventInput),
+        ('post_events_response.json', EventSingleResponse),
+        ('get_events_response.json', EventsResponse),
+        ('get_events_id_response.json', EventSingleResponse),
+        ('put_events_id_request.json', EventInput),
+        ('put_events_id_response.json', EventSingleResponse),
+        ('delete_events_id_response.json', SuccessResponse),
+        ('post_events_confirm_id_request.json', EventConfirmPayload),
+        ('post_events_confirm_id_response.json', SuccessResponse),
+        ('post_events_read_id_response.json', SuccessResponse),
+        ('post_events_archive_id_response.json', SuccessResponse),
+        ('post_events_attachment_id_response.json', SuccessResponse),
+        ('get_events_reach_id_response.json', ReachResponse),
+        ('get_events_download_id_response.json', SuccessResponse),
+        ('delete_events_reset-responses_id_response.json', SuccessResponse),
+    ],
+)
+def test_event_fixture_parses(filename: str, model: type[BaseModel]) -> None:
+    """Example JSON must parse with the expected Pydantic model."""
+    model.model_validate(load_v2_json('event', filename))
+
+
+async def test_get_events(event_endpoint: EventEndpoint, httpx_mock: pytest_httpx.HTTPXMock) -> None:
+    """GET events returns parsed payload."""
+    httpx_mock.add_response(json=load_v2_json('event', 'get_events_response.json'))
+    response = await event_endpoint.get_events()
+    assert response.success is True
+    assert response.data is not None
+
+
+async def test_download_event(event_endpoint: EventEndpoint, httpx_mock: pytest_httpx.HTTPXMock) -> None:
+    """Download event returns raw bytes from mock."""
+    payload = b'%PDF-1.4\n%\xe2\xe3\xcf\xd3\n'
+    httpx_mock.add_response(content=payload)
+    content = await event_endpoint.download_event(EXAMPLE_ID)
+    assert content == payload

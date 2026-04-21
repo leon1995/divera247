@@ -16,8 +16,10 @@ import typing
 
 import anyio
 import httpx
+from pydantic import ValidationError
 
-from divera247.v2.models.auth import AuthJwtPayload
+from divera247.errors import DiveraAuthError
+from divera247.models.auth import AuthJwtPayload, AuthJwtResponse
 
 if typing.TYPE_CHECKING:
     from collections.abc import AsyncGenerator, Generator
@@ -91,20 +93,42 @@ class RefreshingJwtAuth(httpx.Auth):
         return datetime.datetime.now(tz=datetime.UTC) + self._refresh_leeway >= self._payload.exp
 
     async def _refresh(self) -> None:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(
-                f'{self.base_url}v2/auth/jwt',
-                params={'accesskey': self.access_key},
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(
+                    f'{self.base_url}v2/auth/jwt',
+                    params={'accesskey': self.access_key},
+                )
+        except httpx.HTTPError as exc:
+            transport_msg = f'failed to refresh JWT: transport error ({exc})'
+            raise DiveraAuthError(transport_msg) from exc
+
+        if response.is_error:
+            http_msg = f'failed to refresh JWT: HTTP {response.status_code}'
+            raise DiveraAuthError(
+                http_msg,
+                status_code=response.status_code,
+                response=response,
+                body=response.text,
             )
-            response.raise_for_status()
-        body = response.json()
-        if not isinstance(body, dict) or not body.get('success'):
-            raise httpx.HTTPError('failed to obtain jwt: unsuccessful response')
-        data = body.get('data')
-        jwt = data.get('jwt') if isinstance(data, dict) else None
-        if not isinstance(jwt, str) or not jwt:
-            raise httpx.HTTPError('failed to obtain jwt: missing token in response')
-        self._payload = AuthJwtPayload.from_token(jwt)
+
+        try:
+            parsed = AuthJwtResponse.model_validate_json(response.content)
+        except ValidationError as exc:
+            raise DiveraAuthError(
+                'failed to refresh JWT: response did not match expected schema',
+                status_code=response.status_code,
+                response=response,
+                body=response.text,
+            ) from exc
+
+        if not parsed.success or parsed.data is None:
+            raise DiveraAuthError(
+                'failed to refresh JWT: server reported success=false',
+                status_code=response.status_code,
+                response=response,
+            )
+        self._payload = parsed.data.jwt
 
     def sync_auth_flow(self, request: httpx.Request) -> Generator[httpx.Request, httpx.Response]:  # noqa: ARG002
         """Reject sync clients; refreshing a JWT requires an async HTTP call."""

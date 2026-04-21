@@ -118,7 +118,7 @@ def test_parse_event_dispatches_cluster_pull() -> None:
     assert parsed.cluster == SAMPLE_CLUSTER
 
 
-@pytest.mark.parametrize('event_type', ['cluster-vehicle', 'cluster-message', 'some-brand-new-event'])
+@pytest.mark.parametrize('event_type', ['cluster-message', 'cluster-vehicle', 'some-brand-new-event'])
 def test_parse_event_falls_back_to_unknown_and_preserves_type(event_type: str) -> None:
     """Unknown ``type`` values route to UnknownEvent with the original string + extras intact."""
     raw = {'type': event_type, 'foo': 1, 'bar': [1, 2]}

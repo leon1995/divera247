@@ -242,7 +242,7 @@ async def test_subscribe_websocket_unknown_event_falls_back_to_unknown_model(
     fake = FakeWebSocketSession(
         [
             {'type': 'init'},
-            {'type': 'cluster-vehicle', 'payload': {'id': 42}, 'cluster': EXPECTED_CLUSTER},
+            {'type': 'some-brand-new-event', 'payload': {'id': 42}, 'cluster': EXPECTED_CLUSTER},
         ]
     )
     _install_fake_ws(monkeypatch, fake)
@@ -250,7 +250,7 @@ async def test_subscribe_websocket_unknown_event_falls_back_to_unknown_model(
     events = await _collect(subscribe_websocket(ws_client), limit=1)
 
     assert isinstance(events[0], UnknownEvent)
-    assert events[0].type == 'cluster-vehicle'
+    assert events[0].type == 'some-brand-new-event'
     assert events[0].model_extra == {'payload': {'id': 42}, 'cluster': EXPECTED_CLUSTER}
 
 
