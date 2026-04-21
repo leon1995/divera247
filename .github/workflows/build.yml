@@ -13,8 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - name: Install uv
-        uses: astral-sh/setup-uv@v7
+      - uses: astral-sh/setup-uv@v7
       - name: Install dependencies
         run: uv sync --dev
       - uses: astral-sh/ruff-action@v3
@@ -30,16 +29,12 @@ jobs:
       TARGZ: ${{ steps.filenames.outputs.TARGZ }}
 
     steps:
-      - name: Check out Git repository
-        uses: actions/checkout@v6
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v7
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v7
 
       - name: Set new version
         if: startsWith(github.ref, 'refs/tags/v')
-        run: |
-          uv version ${GITHUB_REF/refs\/tags\/v/}
+        run: uv version ${GITHUB_REF/refs\/tags\/v/}
 
       - name: Build package
         run: uv build
@@ -69,15 +64,12 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - run: actions/checkout@v6
-      - name: Install uv
-        uses: astral-sh/setup-uv@v7
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v7
         with:
           python-version: ${{ matrix.python-version }}
           cache-suffix: ${{ matrix.distribution }}
-
-      - name: Download Artifact
-        uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@v8
         with:
           name: distributions
           path: dist
