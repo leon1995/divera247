@@ -11,17 +11,18 @@ Public API:
   JWT re-auth.
 * :class:`WebSocketAuthenticationError` - raised when authentication keeps
   failing so the caller can react instead of silently looping.
-* Pydantic event envelopes (:class:`ClusterPullEvent`,
-  :class:`UserStatusEvent`, :class:`UnknownEvent`) and the
-  :data:`DiveraEvent` discriminated union plus :func:`parse_event` for
-  dispatching raw frames onto typed models.
+* Pydantic event envelopes (:class:`UserStatusEvent`,
+  :class:`UnknownEvent`) and the :data:`DiveraEvent` discriminated union
+  plus :func:`parse_event` for dispatching raw frames onto typed models.
+  Other server-side event types (e.g. ``cluster-pull``,
+  ``cluster-vehicle``) currently surface as :class:`UnknownEvent` until a
+  real sample is available to back a dedicated model.
 
 Typical usage:
 
 .. code-block:: python
 
     from divera247.websocket import (
-        ClusterPullEvent,
         UnknownEvent,
         UserStatusEvent,
         subscribe_websocket,
@@ -31,15 +32,11 @@ Typical usage:
         match event:
             case UserStatusEvent(payload=payload, ucr=ucr):
                 ...
-            case ClusterPullEvent(pull=pull):
-                ...
             case UnknownEvent(type=msg_type):
                 ...
 """
 
 from divera247.websocket.models import (
-    ClusterPullEvent,
-    ClusterPullRef,
     DiveraEvent,
     UnknownEvent,
     UserStatusEvent,
@@ -52,8 +49,6 @@ from divera247.websocket.session import (
 )
 
 __all__ = [
-    'ClusterPullEvent',
-    'ClusterPullRef',
     'DiveraEvent',
     'UnknownEvent',
     'UserStatusEvent',
