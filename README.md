@@ -154,7 +154,6 @@ Two entry points live in `divera247.websocket`:
 
 ```python
 from divera247.websocket import (
-    ClusterPullEvent,
     UnknownEvent,
     UserStatusEvent,
     stream_websocket,
@@ -164,9 +163,7 @@ async for event in stream_websocket(client, ucr_id=527_459):
     match event:
         case UserStatusEvent(payload=payload, ucr=ucr):
             ...
-        case ClusterPullEvent(pull=pull, cluster=cluster):
-            ...
-        case UnknownEvent(type=msg_type):
+        case UnknownEvent():
             ...                                   # forward-compatible fallback
 ```
 

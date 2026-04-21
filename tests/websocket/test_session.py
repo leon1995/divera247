@@ -21,7 +21,6 @@ from divera247.auth import AccessKeyAuth
 from divera247.client import Divera247Client
 from divera247.websocket import session as session_module
 from divera247.websocket.models import (
-    ClusterPullEvent,
     UnknownEvent,
     UserStatusEvent,
 )
@@ -37,7 +36,6 @@ if TYPE_CHECKING:
 
 
 EXPECTED_UCR = 527459
-EXPECTED_CLUSTER = 8381
 EXPECTED_AUTH_ATTEMPT_BUDGET = 3
 EXPECTED_REAUTH_FRAMES = 2
 
@@ -58,11 +56,6 @@ _USER_STATUS_FRAME = {
         'cached': False,
     },
     'ucr': EXPECTED_UCR,
-}
-_CLUSTER_PULL_FRAME = {
-    'type': 'cluster-pull',
-    'pull': {'type': 'news', 'id': 2029889},
-    'cluster': EXPECTED_CLUSTER,
 }
 
 
@@ -221,17 +214,14 @@ async def test_subscribe_websocket_yields_known_event_types(
         [
             {'type': 'init'},
             _USER_STATUS_FRAME,
-            _CLUSTER_PULL_FRAME,
         ]
     )
     _install_fake_ws(monkeypatch, fake)
 
-    events = await _collect(subscribe_websocket(ws_client), limit=2)
+    events = await _collect(subscribe_websocket(ws_client), limit=1)
 
     assert isinstance(events[0], UserStatusEvent)
     assert events[0].ucr == EXPECTED_UCR
-    assert isinstance(events[1], ClusterPullEvent)
-    assert events[1].cluster == EXPECTED_CLUSTER
 
 
 async def test_subscribe_websocket_unknown_event_falls_back_to_unknown_model(
@@ -239,10 +229,11 @@ async def test_subscribe_websocket_unknown_event_falls_back_to_unknown_model(
     ws_client: Divera247Client,
 ) -> None:
     """Unknown ``type`` frames surface as UnknownEvent with the original data intact."""
+    raw_extras = {'payload': {'id': 42}, 'cluster': 8381}
     fake = FakeWebSocketSession(
         [
             {'type': 'init'},
-            {'type': 'some-brand-new-event', 'payload': {'id': 42}, 'cluster': EXPECTED_CLUSTER},
+            {'type': 'some-brand-new-event', **raw_extras},
         ]
     )
     _install_fake_ws(monkeypatch, fake)
@@ -251,7 +242,7 @@ async def test_subscribe_websocket_unknown_event_falls_back_to_unknown_model(
 
     assert isinstance(events[0], UnknownEvent)
     assert events[0].type == 'some-brand-new-event'
-    assert events[0].model_extra == {'payload': {'id': 42}, 'cluster': EXPECTED_CLUSTER}
+    assert events[0].model_extra == raw_extras
 
 
 async def test_subscribe_websocket_init_frame_is_not_yielded(
@@ -259,13 +250,13 @@ async def test_subscribe_websocket_init_frame_is_not_yielded(
     ws_client: Divera247Client,
 ) -> None:
     """``init`` is session-level and must stay internal to the session loop."""
-    fake = FakeWebSocketSession([{'type': 'init'}, _CLUSTER_PULL_FRAME])
+    fake = FakeWebSocketSession([{'type': 'init'}, _USER_STATUS_FRAME])
     _install_fake_ws(monkeypatch, fake)
 
     events = await _collect(subscribe_websocket(ws_client), limit=1)
 
     assert len(events) == 1
-    assert isinstance(events[0], ClusterPullEvent)
+    assert isinstance(events[0], UserStatusEvent)
 
 
 async def test_subscribe_websocket_ignores_non_json_frames(
@@ -277,14 +268,14 @@ async def test_subscribe_websocket_ignores_non_json_frames(
         [
             {'type': 'init'},
             'this is not json',
-            _CLUSTER_PULL_FRAME,
+            _USER_STATUS_FRAME,
         ]
     )
     _install_fake_ws(monkeypatch, fake)
 
     events = await _collect(subscribe_websocket(ws_client), limit=1)
 
-    assert isinstance(events[0], ClusterPullEvent)
+    assert isinstance(events[0], UserStatusEvent)
 
 
 async def test_subscribe_websocket_reauthenticates_on_jwt_expired(
@@ -297,14 +288,14 @@ async def test_subscribe_websocket_reauthenticates_on_jwt_expired(
             {'type': 'init'},
             {'type': 'jwtExpired'},
             {'type': 'init'},
-            _CLUSTER_PULL_FRAME,
+            _USER_STATUS_FRAME,
         ]
     )
     _install_fake_ws(monkeypatch, fake)
 
     events = await _collect(subscribe_websocket(ws_client), limit=1)
 
-    assert isinstance(events[0], ClusterPullEvent)
+    assert isinstance(events[0], UserStatusEvent)
     auth_frames = [frame for frame in fake.sent if frame.get('type') == 'authenticate']
     assert len(auth_frames) == EXPECTED_REAUTH_FRAMES
 
@@ -338,7 +329,7 @@ async def test_subscribe_websocket_init_resets_auth_attempt_budget(
         {'type': 'jwtExpired'},
         {'type': 'jwtExpired'},
         {'type': 'init'},
-        _CLUSTER_PULL_FRAME,
+        _USER_STATUS_FRAME,
     ]
     fake = FakeWebSocketSession(frames)
     _install_fake_ws(monkeypatch, fake)
@@ -348,7 +339,7 @@ async def test_subscribe_websocket_init_resets_auth_attempt_budget(
         limit=1,
     )
 
-    assert isinstance(events[0], ClusterPullEvent)
+    assert isinstance(events[0], UserStatusEvent)
 
 
 async def test_subscribe_websocket_propagates_disconnect(

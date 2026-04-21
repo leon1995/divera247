@@ -17,7 +17,7 @@ import pytest
 from divera247.auth import AccessKeyAuth
 from divera247.client import Divera247Client
 from divera247.websocket import session as session_module
-from divera247.websocket.models import ClusterPullEvent
+from divera247.websocket.models import UserStatusEvent
 from divera247.websocket.session import (
     WebSocketAuthenticationError,
     stream_websocket,
@@ -26,11 +26,24 @@ from divera247.websocket.session import (
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator, Iterable, Sequence
 
-EXPECTED_CLUSTER = 8381
-_CLUSTER_PULL_FRAME: dict[str, Any] = {
-    'type': 'cluster-pull',
-    'pull': {'type': 'news', 'id': 2029889},
-    'cluster': EXPECTED_CLUSTER,
+EXPECTED_UCR = 527459
+_USER_STATUS_FRAME: dict[str, Any] = {
+    'type': 'user-status',
+    'payload': {
+        'status_id': 33035,
+        'status_skip_statusplan': False,
+        'status_skip_geofence': False,
+        'status_set_date': 1776767153,
+        'status_reset_date': '',
+        'status_reset_id': 0,
+        'status_log': [],
+        'status_changes': [],
+        'note': '',
+        'vehicle': 0,
+        'ts': 1776767153,
+        'cached': False,
+    },
+    'ucr': EXPECTED_UCR,
 }
 
 
@@ -105,15 +118,15 @@ async def test_stream_websocket_reconnects_after_disconnect(
     opened = _install_stream_ws(
         monkeypatch,
         [
-            _FakeSession([{'type': 'init'}, _CLUSTER_PULL_FRAME]),
-            _FakeSession([{'type': 'init'}, _CLUSTER_PULL_FRAME]),
+            _FakeSession([{'type': 'init'}, _USER_STATUS_FRAME]),
+            _FakeSession([{'type': 'init'}, _USER_STATUS_FRAME]),
         ],
     )
 
     events = await _collect(stream_websocket(ws_client, initial_backoff=0.0), limit=2)
 
     assert len(events) == 2
-    assert all(isinstance(event, ClusterPullEvent) for event in events)
+    assert all(isinstance(event, UserStatusEvent) for event in events)
     assert len(opened) == 2
 
 

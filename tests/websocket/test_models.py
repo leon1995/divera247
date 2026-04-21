@@ -5,8 +5,6 @@ from __future__ import annotations
 import pytest
 
 from divera247.websocket.models import (
-    ClusterPullEvent,
-    ClusterPullRef,
     UnknownEvent,
     UserStatusEvent,
     parse_event,
@@ -40,12 +38,6 @@ _USER_STATUS_SAMPLE: dict = {
     'ucr': SAMPLE_UCR,
 }
 
-_CLUSTER_PULL_SAMPLE: dict = {
-    'type': 'cluster-pull',
-    'pull': {'type': 'news', 'id': SAMPLE_PULL_ID},
-    'cluster': SAMPLE_CLUSTER,
-}
-
 
 def test_user_status_event_parses_sample() -> None:
     """UserStatusEvent accepts the documented envelope + pull status payload."""
@@ -60,29 +52,6 @@ def test_user_status_event_rejects_wrong_type_literal() -> None:
     bad = dict(_USER_STATUS_SAMPLE, type='something-else')
     with pytest.raises(ValueError, match='user-status'):
         UserStatusEvent.model_validate(bad)
-
-
-def test_cluster_pull_ref_parses_minimal_fields() -> None:
-    """ClusterPullRef exposes ``type`` + ``id`` from the nested ``pull`` block."""
-    ref = ClusterPullRef.model_validate({'type': 'news', 'id': SAMPLE_REF_ID})
-    assert ref.type == 'news'
-    assert ref.id == SAMPLE_REF_ID
-
-
-def test_cluster_pull_event_parses_sample() -> None:
-    """ClusterPullEvent exposes both the cluster id and the typed reference."""
-    event = ClusterPullEvent.model_validate(_CLUSTER_PULL_SAMPLE)
-    assert event.type == 'cluster-pull'
-    assert event.cluster == SAMPLE_CLUSTER
-    assert event.pull.type == 'news'
-    assert event.pull.id == SAMPLE_PULL_ID
-
-
-def test_cluster_pull_event_rejects_wrong_type_literal() -> None:
-    """Non-matching ``type`` value must not validate as ClusterPullEvent."""
-    bad = dict(_CLUSTER_PULL_SAMPLE, type='user-status')
-    with pytest.raises(ValueError, match='cluster-pull'):
-        ClusterPullEvent.model_validate(bad)
 
 
 def test_unknown_event_keeps_arbitrary_type() -> None:
@@ -111,16 +80,17 @@ def test_parse_event_dispatches_user_status() -> None:
     assert parsed.ucr == SAMPLE_UCR
 
 
-def test_parse_event_dispatches_cluster_pull() -> None:
-    """``parse_event`` routes ``cluster-pull`` frames to ClusterPullEvent."""
-    parsed = parse_event(_CLUSTER_PULL_SAMPLE)
-    assert isinstance(parsed, ClusterPullEvent)
-    assert parsed.cluster == SAMPLE_CLUSTER
-
-
-@pytest.mark.parametrize('event_type', ['cluster-message', 'cluster-vehicle', 'some-brand-new-event'])
+@pytest.mark.parametrize(
+    'event_type',
+    ['cluster-pull', 'cluster-message', 'cluster-vehicle', 'some-brand-new-event'],
+)
 def test_parse_event_falls_back_to_unknown_and_preserves_type(event_type: str) -> None:
-    """Unknown ``type`` values route to UnknownEvent with the original string + extras intact."""
+    """Unknown ``type`` values route to UnknownEvent with the original string + extras intact.
+
+    ``cluster-pull`` is included here explicitly: it is a known server event
+    but has no typed envelope yet (awaiting a real live-API sample), so it
+    must currently flow through the unknown-event fallback.
+    """
     raw = {'type': event_type, 'foo': 1, 'bar': [1, 2]}
     parsed = parse_event(raw)
     assert isinstance(parsed, UnknownEvent)
@@ -138,3 +108,23 @@ def test_parse_event_non_string_type_still_raises() -> None:
     """A numeric ``type`` is not a valid tag and must not be coerced into UnknownEvent."""
     with pytest.raises(ValueError, match='type'):
         parse_event({'type': 123})
+
+
+def test_parse_event_falls_back_when_known_type_has_malformed_payload(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Known ``type`` with an unexpectedly shaped body degrades to UnknownEvent with a warning.
+
+    Guards against the subscribe loop dying on a single malformed frame when
+    the server starts sending a slightly different shape; the raw frame is
+    logged so the typed model can be updated.
+    """
+    malformed = {'type': 'user-status', 'ucr': SAMPLE_UCR, 'payload': 'not-a-status-object'}
+
+    with caplog.at_level('WARNING', logger='divera247.websocket.models'):
+        parsed = parse_event(malformed)
+
+    assert isinstance(parsed, UnknownEvent)
+    assert parsed.type == 'user-status'
+    assert parsed.model_extra == {'ucr': SAMPLE_UCR, 'payload': 'not-a-status-object'}
+    assert any('user-status' in record.message for record in caplog.records)
