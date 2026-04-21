@@ -1,0 +1,1 @@
+Schema files obtianed from https://api.divera247.com/

@@ -1,10 +1,34 @@
+[build-system]
+requires = ["uv_build>=0.9.22,<0.10.0"]
+build-backend = "uv_build"
+
 [project]
 name = "divera247"
 version = "0.0.0"
 description = "Async Python client for the DIVERA 24/7 REST API."
 readme = "README.md"
+license = "AGPL-3.0-only"
+license-files = ["LICENSE"]
 authors = [
     { name = "Leon", email = "y6q6ea9w@mail-proxy.org" }
+]
+keywords = [
+    "divera",
+    "divera247",
+    "api-client",
+    "rest",
+    "async",
+    "httpx",
+    "pydantic",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Typing :: Typed",
 ]
 requires-python = ">=3.13"
 dependencies = [
@@ -13,15 +37,21 @@ dependencies = [
     "pydantic>=2.12.5",
 ]
 
-[build-system]
-requires = ["uv_build>=0.9.22,<0.10.0"]
-build-backend = "uv_build"
+[project.optional-dependencies]
+ws = [
+    "httpx-ws>=0.9.0",
+]
+
+[project.urls]
+Repository = "https://github.com/leon1995/divera247"
+Issues = "https://github.com/leon1995/divera247/issues"
 
 [dependency-groups]
 test = [
     "pytest>=9.0.2",
     "pytest-httpx>=0.36.0",
     "trio>=0.33.0",
+    "divera247[ws]",
 ]
 dev = [
     "ruff>=0.15.1",
