@@ -7,33 +7,37 @@ import pytest
 from divera247.websocket.models import (
     ClusterPullEvent,
     ClusterPullRef,
+    ClusterVehicleEvent,
+    ClusterVehicleState,
     UnknownEvent,
     UserStatusEvent,
     parse_event,
 )
 
-SAMPLE_UCR = 527459
-SAMPLE_STATUS_ID = 33035
-SAMPLE_CLUSTER = 8381
-SAMPLE_PULL_ID = 33688274
+SAMPLE_UCR = 1234
+SAMPLE_STATUS_ID = 1001
+SAMPLE_CLUSTER = 1234
+SAMPLE_PULL_ID = 1234
 SAMPLE_PULL_TYPE = 'alarm'
+SAMPLE_VEHICLE_ID = 1234
+SAMPLE_VEHICLE_FMS = 6
 SAMPLE_REF_ID = 42
 
 _STATUS_BLOCK: dict = {
     'status_id': SAMPLE_STATUS_ID,
     'status_skip_statusplan': False,
     'status_skip_geofence': False,
-    'status_set_date': 1776767153,
+    'status_set_date': 1700000000,
     'status_reset_date': '',
     'status_reset_id': 0,
     'status_log': [],
     'status_changes': [
-        {'ts': 1776767114, 'status': 33035, 'note': '', 'vehicle': 0, 'event': 0, 'type': 0},
-        {'ts': 1776767152, 'status': 33036, 'note': '', 'vehicle': 0, 'event': 0, 'type': 0},
+        {'ts': 1700000000, 'status': 1001, 'note': '', 'vehicle': 0, 'event': 0, 'type': 0},
+        {'ts': 1700000060, 'status': 1002, 'note': '', 'vehicle': 0, 'event': 0, 'type': 0},
     ],
     'note': '',
     'vehicle': 0,
-    'ts': 1776767153,
+    'ts': 1700000060,
     'cached': False,
 }
 
@@ -51,6 +55,20 @@ _CLUSTER_PULL_SAMPLE: dict = {
     'payload': {
         'type': 'cluster-pull',
         'pull': {'type': SAMPLE_PULL_TYPE, 'id': SAMPLE_PULL_ID},
+        'cluster': SAMPLE_CLUSTER,
+    },
+}
+
+_CLUSTER_VEHICLE_SAMPLE: dict = {
+    'type': 'cluster-vehicle',
+    'payload': {
+        'type': 'cluster-vehicle',
+        'vehicle': {
+            'id': SAMPLE_VEHICLE_ID,
+            'fmsstatus_id': SAMPLE_VEHICLE_FMS,
+            'fmsstatus_note': '',
+            'fmsstatus_ts': 1700000120,
+        },
         'cluster': SAMPLE_CLUSTER,
     },
 }
@@ -114,6 +132,30 @@ def test_cluster_pull_ref_preserves_unknown_fields() -> None:
     assert ref.model_extra == {'title': 'Einsatz', 'prio': 1}
 
 
+def test_cluster_vehicle_event_flattens_nested_payload() -> None:
+    """ClusterVehicleEvent hoists ``vehicle`` + ``cluster`` via AliasPath."""
+    event = ClusterVehicleEvent.model_validate(_CLUSTER_VEHICLE_SAMPLE)
+    assert event.type == 'cluster-vehicle'
+    assert event.cluster == SAMPLE_CLUSTER
+    assert isinstance(event.vehicle, ClusterVehicleState)
+    assert event.vehicle.id == SAMPLE_VEHICLE_ID
+    assert event.vehicle.fmsstatus_id == SAMPLE_VEHICLE_FMS
+
+
+def test_cluster_vehicle_state_preserves_unknown_fields() -> None:
+    """Extra vehicle fields are tolerated and kept in ``model_extra``."""
+    raw = {
+        'id': SAMPLE_VEHICLE_ID,
+        'fmsstatus_id': SAMPLE_VEHICLE_FMS,
+        'fmsstatus_note': '',
+        'fmsstatus_ts': 1700000120,
+        'name': 'LF 20',
+    }
+    state = ClusterVehicleState.model_validate(raw)
+    assert state.id == SAMPLE_VEHICLE_ID
+    assert state.model_extra == {'name': 'LF 20'}
+
+
 def test_unknown_event_keeps_arbitrary_type() -> None:
     """UnknownEvent stores the original ``type`` string instead of overwriting it."""
     event = UnknownEvent.model_validate({'type': 'cluster-vehicle'})
@@ -150,9 +192,18 @@ def test_parse_event_dispatches_cluster_pull() -> None:
     assert parsed.pull.id == SAMPLE_PULL_ID
 
 
+def test_parse_event_dispatches_cluster_vehicle() -> None:
+    """``parse_event`` routes ``cluster-vehicle`` frames to ClusterVehicleEvent."""
+    parsed = parse_event(_CLUSTER_VEHICLE_SAMPLE)
+    assert isinstance(parsed, ClusterVehicleEvent)
+    assert parsed.cluster == SAMPLE_CLUSTER
+    assert parsed.vehicle.id == SAMPLE_VEHICLE_ID
+    assert parsed.vehicle.fmsstatus_id == SAMPLE_VEHICLE_FMS
+
+
 @pytest.mark.parametrize(
     'event_type',
-    ['cluster-message', 'cluster-vehicle', 'some-brand-new-event'],
+    ['cluster-message', 'some-brand-new-event'],
 )
 def test_parse_event_falls_back_to_unknown_and_preserves_type(event_type: str) -> None:
     """Unknown ``type`` values route to UnknownEvent with the original string + extras intact."""

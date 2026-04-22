@@ -52,7 +52,7 @@ class ClusterPullEvent(BaseModel):
           "type": "cluster-pull",
           "payload": {
             "type": "cluster-pull",
-            "pull": {"type": "alarm", "id": 123456},
+            "pull": {"type": "alarm", "id": 1234},
             "cluster": 1234
           }
         }
@@ -65,6 +65,50 @@ class ClusterPullEvent(BaseModel):
     pull: ClusterPullRef = Field(
         validation_alias=AliasPath('payload', 'pull'),
         description='Referenz auf die geänderte Ressource (aus payload.pull)',
+    )
+    cluster: int = Field(
+        validation_alias=AliasPath('payload', 'cluster'),
+        description='ID des betroffenen Clusters (aus payload.cluster)',
+    )
+
+
+class ClusterVehicleState(BaseModel):
+    """Vehicle status snapshot carried by a ``cluster-vehicle`` event."""
+
+    model_config = ConfigDict(extra='allow')
+
+    id: int = Field(description='ID des betroffenen Fahrzeugs')
+    fmsstatus_id: int = Field(description='Aktuelle FMS-Status-ID')
+    fmsstatus_note: str = Field(description='Optionaler Freitext zum FMS-Status')
+    fmsstatus_ts: int = Field(description='Unix-Timestamp der letzten Statusaenderung')
+
+
+class ClusterVehicleEvent(BaseModel):
+    """``cluster-vehicle`` WebSocket event: vehicle status changed in a cluster.
+
+    Wire format:
+
+    .. code-block:: json
+
+        {
+          "type": "cluster-vehicle",
+          "payload": {
+            "type": "cluster-vehicle",
+            "vehicle": {
+              "id": 1234,
+              "fmsstatus_id": 6,
+              "fmsstatus_note": "",
+              "fmsstatus_ts": 1700000000
+            },
+            "cluster": 1234
+          }
+        }
+    """
+
+    type: Literal['cluster-vehicle'] = Field(description='Event-Typ')
+    vehicle: ClusterVehicleState = Field(
+        validation_alias=AliasPath('payload', 'vehicle'),
+        description='Aktueller Fahrzeugstatus (aus payload.vehicle)',
     )
     cluster: int = Field(
         validation_alias=AliasPath('payload', 'cluster'),
@@ -88,7 +132,7 @@ class UserStatusEvent(BaseModel):
           "payload": {
             "type": "user-status",
             "status": { ...PullStatusData... },
-            "ucr": 527459
+            "ucr": 1234
           }
         }
 
@@ -114,9 +158,8 @@ class UnknownEvent(BaseModel):
     Keeps the raw ``type`` string so callers can still dispatch on it, and
     preserves every other top-level field as extras (accessible via
     :attr:`model_extra` or direct attribute access). Used both for genuinely
-    unknown event types (e.g. ``cluster-vehicle``) and as a defensive
-    fallback when a known event's inner payload fails its dedicated
-    validation (see :func:`parse_event`).
+    unknown event types and as a defensive fallback when a known event's
+    inner payload fails its dedicated validation (see :func:`parse_event`).
     """
 
     model_config = ConfigDict(extra='allow')
@@ -124,7 +167,7 @@ class UnknownEvent(BaseModel):
     type: str = Field(description='Raw event type as sent by the server')
 
 
-_KNOWN_EVENT_TYPES: frozenset[str] = frozenset({'user-status', 'cluster-pull'})
+_KNOWN_EVENT_TYPES: frozenset[str] = frozenset({'user-status', 'cluster-pull', 'cluster-vehicle'})
 
 
 def _event_discriminator(value: Any) -> str:
@@ -143,6 +186,7 @@ def _event_discriminator(value: Any) -> str:
 DiveraEvent = Annotated[
     Annotated[UserStatusEvent, Tag('user-status')]
     | Annotated[ClusterPullEvent, Tag('cluster-pull')]
+    | Annotated[ClusterVehicleEvent, Tag('cluster-vehicle')]
     | Annotated[UnknownEvent, Tag('unknown')],
     Discriminator(_event_discriminator),
 ]
@@ -153,10 +197,12 @@ places that want to build their own :class:`pydantic.TypeAdapter`.
 """
 
 
-_event_adapter: TypeAdapter[UserStatusEvent | ClusterPullEvent | UnknownEvent] = TypeAdapter(DiveraEvent)
+_event_adapter: TypeAdapter[UserStatusEvent | ClusterPullEvent | ClusterVehicleEvent | UnknownEvent] = TypeAdapter(
+    DiveraEvent
+)
 
 
-def parse_event(event: Mapping[str, Any]) -> UserStatusEvent | ClusterPullEvent | UnknownEvent:
+def parse_event(event: Mapping[str, Any]) -> UserStatusEvent | ClusterPullEvent | ClusterVehicleEvent | UnknownEvent:
     """Parse a raw WebSocket event into the matching typed model.
 
     Dispatches on ``type`` via :data:`DiveraEvent`; unknown or missing types
