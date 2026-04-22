@@ -154,6 +154,7 @@ Two entry points live in `divera247.websocket`:
 
 ```python
 from divera247.websocket import (
+    ClusterPullEvent,
     UnknownEvent,
     UserStatusEvent,
     stream_websocket,
