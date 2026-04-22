@@ -5,6 +5,8 @@ from __future__ import annotations
 import pytest
 
 from divera247.websocket.models import (
+    ClusterPullEvent,
+    ClusterPullRef,
     UnknownEvent,
     UserStatusEvent,
     parse_event,
@@ -13,45 +15,103 @@ from divera247.websocket.models import (
 SAMPLE_UCR = 527459
 SAMPLE_STATUS_ID = 33035
 SAMPLE_CLUSTER = 8381
-SAMPLE_PULL_ID = 2029889
+SAMPLE_PULL_ID = 33688274
+SAMPLE_PULL_TYPE = 'alarm'
 SAMPLE_REF_ID = 42
+
+_STATUS_BLOCK: dict = {
+    'status_id': SAMPLE_STATUS_ID,
+    'status_skip_statusplan': False,
+    'status_skip_geofence': False,
+    'status_set_date': 1776767153,
+    'status_reset_date': '',
+    'status_reset_id': 0,
+    'status_log': [],
+    'status_changes': [
+        {'ts': 1776767114, 'status': 33035, 'note': '', 'vehicle': 0, 'event': 0, 'type': 0},
+        {'ts': 1776767152, 'status': 33036, 'note': '', 'vehicle': 0, 'event': 0, 'type': 0},
+    ],
+    'note': '',
+    'vehicle': 0,
+    'ts': 1776767153,
+    'cached': False,
+}
 
 _USER_STATUS_SAMPLE: dict = {
     'type': 'user-status',
     'payload': {
-        'status_id': SAMPLE_STATUS_ID,
-        'status_skip_statusplan': False,
-        'status_skip_geofence': False,
-        'status_set_date': 1776767153,
-        'status_reset_date': '',
-        'status_reset_id': 0,
-        'status_log': [],
-        'status_changes': [
-            {'ts': 1776767114, 'status': 33035, 'note': '', 'vehicle': 0, 'event': 0, 'type': 0},
-            {'ts': 1776767152, 'status': 33036, 'note': '', 'vehicle': 0, 'event': 0, 'type': 0},
-        ],
-        'note': '',
-        'vehicle': 0,
-        'ts': 1776767153,
-        'cached': False,
+        'type': 'user-status',
+        'status': _STATUS_BLOCK,
+        'ucr': SAMPLE_UCR,
     },
-    'ucr': SAMPLE_UCR,
+}
+
+_CLUSTER_PULL_SAMPLE: dict = {
+    'type': 'cluster-pull',
+    'payload': {
+        'type': 'cluster-pull',
+        'pull': {'type': SAMPLE_PULL_TYPE, 'id': SAMPLE_PULL_ID},
+        'cluster': SAMPLE_CLUSTER,
+    },
 }
 
 
-def test_user_status_event_parses_sample() -> None:
-    """UserStatusEvent accepts the documented envelope + pull status payload."""
+def test_user_status_event_flattens_nested_payload() -> None:
+    """UserStatusEvent hoists ``status`` and ``ucr`` out of the nested payload via AliasPath."""
     event = UserStatusEvent.model_validate(_USER_STATUS_SAMPLE)
     assert event.type == 'user-status'
     assert event.ucr == SAMPLE_UCR
-    assert event.payload.status_id == SAMPLE_STATUS_ID
+    assert event.status.status_id == SAMPLE_STATUS_ID
 
 
-def test_user_status_event_rejects_wrong_type_literal() -> None:
-    """Non-matching ``type`` value must not validate as UserStatusEvent."""
+def test_user_status_event_rejects_wrong_outer_type_literal() -> None:
+    """Non-matching outer ``type`` value must not validate as UserStatusEvent."""
     bad = dict(_USER_STATUS_SAMPLE, type='something-else')
     with pytest.raises(ValueError, match='user-status'):
         UserStatusEvent.model_validate(bad)
+
+
+def test_user_status_event_requires_nested_payload_keys() -> None:
+    """Missing ``payload.status`` or ``payload.ucr`` breaks validation.
+
+    Guards the :class:`~pydantic.AliasPath` flattening: if the server ever
+    drops the nested structure, we want a hard failure (and thus a
+    fallback to :class:`UnknownEvent` via :func:`parse_event`) instead of
+    silently producing an event with dummy fields.
+    """
+    bad = dict(_USER_STATUS_SAMPLE, payload={'type': 'user-status'})
+    with pytest.raises(ValueError, match=r'status|ucr'):
+        UserStatusEvent.model_validate(bad)
+
+
+def test_cluster_pull_event_flattens_nested_payload() -> None:
+    """ClusterPullEvent hoists ``pull`` and ``cluster`` out of the nested payload via AliasPath."""
+    event = ClusterPullEvent.model_validate(_CLUSTER_PULL_SAMPLE)
+    assert event.type == 'cluster-pull'
+    assert event.cluster == SAMPLE_CLUSTER
+    assert isinstance(event.pull, ClusterPullRef)
+    assert event.pull.type == SAMPLE_PULL_TYPE
+    assert event.pull.id == SAMPLE_PULL_ID
+
+
+def test_cluster_pull_event_rejects_wrong_outer_type_literal() -> None:
+    """Non-matching outer ``type`` value must not validate as ClusterPullEvent."""
+    bad = dict(_CLUSTER_PULL_SAMPLE, type='something-else')
+    with pytest.raises(ValueError, match='cluster-pull'):
+        ClusterPullEvent.model_validate(bad)
+
+
+def test_cluster_pull_ref_preserves_unknown_fields() -> None:
+    """Extra fields on the pull reference round-trip via ``model_extra``.
+
+    The server is free to enrich the ``pull`` reference (e.g. with a
+    ``title`` or ``updated_at``) without breaking this model.
+    """
+    raw = {'type': SAMPLE_PULL_TYPE, 'id': SAMPLE_PULL_ID, 'title': 'Einsatz', 'prio': 1}
+    ref = ClusterPullRef.model_validate(raw)
+    assert ref.type == SAMPLE_PULL_TYPE
+    assert ref.id == SAMPLE_PULL_ID
+    assert ref.model_extra == {'title': 'Einsatz', 'prio': 1}
 
 
 def test_unknown_event_keeps_arbitrary_type() -> None:
@@ -78,19 +138,24 @@ def test_parse_event_dispatches_user_status() -> None:
     parsed = parse_event(_USER_STATUS_SAMPLE)
     assert isinstance(parsed, UserStatusEvent)
     assert parsed.ucr == SAMPLE_UCR
+    assert parsed.status.status_id == SAMPLE_STATUS_ID
+
+
+def test_parse_event_dispatches_cluster_pull() -> None:
+    """``parse_event`` routes ``cluster-pull`` frames to ClusterPullEvent."""
+    parsed = parse_event(_CLUSTER_PULL_SAMPLE)
+    assert isinstance(parsed, ClusterPullEvent)
+    assert parsed.cluster == SAMPLE_CLUSTER
+    assert parsed.pull.type == SAMPLE_PULL_TYPE
+    assert parsed.pull.id == SAMPLE_PULL_ID
 
 
 @pytest.mark.parametrize(
     'event_type',
-    ['cluster-pull', 'cluster-message', 'cluster-vehicle', 'some-brand-new-event'],
+    ['cluster-message', 'cluster-vehicle', 'some-brand-new-event'],
 )
 def test_parse_event_falls_back_to_unknown_and_preserves_type(event_type: str) -> None:
-    """Unknown ``type`` values route to UnknownEvent with the original string + extras intact.
-
-    ``cluster-pull`` is included here explicitly: it is a known server event
-    but has no typed envelope yet (awaiting a real live-API sample), so it
-    must currently flow through the unknown-event fallback.
-    """
+    """Unknown ``type`` values route to UnknownEvent with the original string + extras intact."""
     raw = {'type': event_type, 'foo': 1, 'bar': [1, 2]}
     parsed = parse_event(raw)
     assert isinstance(parsed, UnknownEvent)
@@ -119,12 +184,12 @@ def test_parse_event_falls_back_when_known_type_has_malformed_payload(
     the server starts sending a slightly different shape; the raw frame is
     logged so the typed model can be updated.
     """
-    malformed = {'type': 'user-status', 'ucr': SAMPLE_UCR, 'payload': 'not-a-status-object'}
+    malformed = {'type': 'user-status', 'payload': 'not-a-payload-object'}
 
     with caplog.at_level('WARNING', logger='divera247.websocket.models'):
         parsed = parse_event(malformed)
 
     assert isinstance(parsed, UnknownEvent)
     assert parsed.type == 'user-status'
-    assert parsed.model_extra == {'ucr': SAMPLE_UCR, 'payload': 'not-a-status-object'}
+    assert parsed.model_extra == {'payload': 'not-a-payload-object'}
     assert any('user-status' in record.message for record in caplog.records)

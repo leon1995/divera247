@@ -42,20 +42,23 @@ EXPECTED_REAUTH_FRAMES = 2
 _USER_STATUS_FRAME = {
     'type': 'user-status',
     'payload': {
-        'status_id': 33035,
-        'status_skip_statusplan': False,
-        'status_skip_geofence': False,
-        'status_set_date': 1776767153,
-        'status_reset_date': '',
-        'status_reset_id': 0,
-        'status_log': [],
-        'status_changes': [],
-        'note': '',
-        'vehicle': 0,
-        'ts': 1776767153,
-        'cached': False,
+        'type': 'user-status',
+        'status': {
+            'status_id': 33035,
+            'status_skip_statusplan': False,
+            'status_skip_geofence': False,
+            'status_set_date': 1776767153,
+            'status_reset_date': '',
+            'status_reset_id': 0,
+            'status_log': [],
+            'status_changes': [],
+            'note': '',
+            'vehicle': 0,
+            'ts': 1776767153,
+            'cached': False,
+        },
+        'ucr': EXPECTED_UCR,
     },
-    'ucr': EXPECTED_UCR,
 }
 
 
