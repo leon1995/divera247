@@ -155,17 +155,20 @@ Two entry points live in `divera247.websocket`:
 ```python
 from divera247.websocket import (
     ClusterPullEvent,
+    ClusterVehicleEvent,
     UnknownEvent,
     UserStatusEvent,
     stream_websocket,
 )
 
-async for event in stream_websocket(client, ucr_id=527_459):
+async for event in stream_websocket(client, ucr_id=1_234):
     match event:
         case UserStatusEvent(ucr=ucr, status=status):
             ...                                   # status is a PullStatusData
         case ClusterPullEvent(cluster=cluster, pull=pull):
             ...                                   # re-fetch pull.type (e.g. "alarm") + pull.id
+        case ClusterVehicleEvent(cluster=cluster, vehicle=vehicle):
+            ...                                   # vehicle.id / vehicle.fmsstatus_id update
         case UnknownEvent():
             ...                                   # forward-compatible fallback
 ```
