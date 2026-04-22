@@ -123,12 +123,15 @@ async def test_stream_websocket_reconnects_after_disconnect(
         [
             _FakeSession([{'type': 'init'}, _USER_STATUS_FRAME]),
             _FakeSession([{'type': 'init'}, _USER_STATUS_FRAME]),
+            _FakeSession([{'type': 'init'}, _USER_STATUS_FRAME]),
+            _FakeSession([{'type': 'init'}, _USER_STATUS_FRAME]),
         ],
     )
 
     events = await _collect(stream_websocket(ws_client, initial_backoff=0.0), limit=2)
 
     assert len(events) == 2
+    assert all(isinstance(event, UserStatusEvent) for event in events)
     assert all(isinstance(event, UserStatusEvent) for event in events)
     assert len(opened) == 2
 

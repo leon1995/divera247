@@ -24,7 +24,6 @@ Typical usage:
 .. code-block:: python
 
     from divera247.websocket import (
-        ClusterPullEvent,
         UnknownEvent,
         UserStatusEvent,
         subscribe_websocket,
@@ -41,8 +40,6 @@ Typical usage:
 """
 
 from divera247.websocket.models import (
-    ClusterPullEvent,
-    ClusterPullRef,
     DiveraEvent,
     UnknownEvent,
     UserStatusEvent,
@@ -55,8 +52,6 @@ from divera247.websocket.session import (
 )
 
 __all__ = [
-    'ClusterPullEvent',
-    'ClusterPullRef',
     'DiveraEvent',
     'UnknownEvent',
     'UserStatusEvent',

@@ -222,6 +222,7 @@ async def test_subscribe_websocket_yields_known_event_types(
     _install_fake_ws(monkeypatch, fake)
 
     events = await _collect(subscribe_websocket(ws_client), limit=1)
+    events = await _collect(subscribe_websocket(ws_client), limit=1)
 
     assert isinstance(events[0], UserStatusEvent)
     assert events[0].ucr == EXPECTED_UCR
@@ -233,9 +234,11 @@ async def test_subscribe_websocket_unknown_event_falls_back_to_unknown_model(
 ) -> None:
     """Unknown ``type`` frames surface as UnknownEvent with the original data intact."""
     raw_extras = {'payload': {'id': 42}, 'cluster': 8381}
+    raw_extras = {'payload': {'id': 42}, 'cluster': 8381}
     fake = FakeWebSocketSession(
         [
             {'type': 'init'},
+            {'type': 'some-brand-new-event', **raw_extras},
             {'type': 'some-brand-new-event', **raw_extras},
         ]
     )
@@ -246,6 +249,7 @@ async def test_subscribe_websocket_unknown_event_falls_back_to_unknown_model(
     assert isinstance(events[0], UnknownEvent)
     assert events[0].type == 'some-brand-new-event'
     assert events[0].model_extra == raw_extras
+    assert events[0].model_extra == raw_extras
 
 
 async def test_subscribe_websocket_init_frame_is_not_yielded(
@@ -254,11 +258,13 @@ async def test_subscribe_websocket_init_frame_is_not_yielded(
 ) -> None:
     """``init`` is session-level and must stay internal to the session loop."""
     fake = FakeWebSocketSession([{'type': 'init'}, _USER_STATUS_FRAME])
+    fake = FakeWebSocketSession([{'type': 'init'}, _USER_STATUS_FRAME])
     _install_fake_ws(monkeypatch, fake)
 
     events = await _collect(subscribe_websocket(ws_client), limit=1)
 
     assert len(events) == 1
+    assert isinstance(events[0], UserStatusEvent)
     assert isinstance(events[0], UserStatusEvent)
 
 
@@ -272,12 +278,14 @@ async def test_subscribe_websocket_ignores_non_json_frames(
             {'type': 'init'},
             'this is not json',
             _USER_STATUS_FRAME,
+            _USER_STATUS_FRAME,
         ]
     )
     _install_fake_ws(monkeypatch, fake)
 
     events = await _collect(subscribe_websocket(ws_client), limit=1)
 
+    assert isinstance(events[0], UserStatusEvent)
     assert isinstance(events[0], UserStatusEvent)
 
 
@@ -292,12 +300,14 @@ async def test_subscribe_websocket_reauthenticates_on_jwt_expired(
             {'type': 'jwtExpired'},
             {'type': 'init'},
             _USER_STATUS_FRAME,
+            _USER_STATUS_FRAME,
         ]
     )
     _install_fake_ws(monkeypatch, fake)
 
     events = await _collect(subscribe_websocket(ws_client), limit=1)
 
+    assert isinstance(events[0], UserStatusEvent)
     assert isinstance(events[0], UserStatusEvent)
     auth_frames = [frame for frame in fake.sent if frame.get('type') == 'authenticate']
     assert len(auth_frames) == EXPECTED_REAUTH_FRAMES
@@ -333,6 +343,7 @@ async def test_subscribe_websocket_init_resets_auth_attempt_budget(
         {'type': 'jwtExpired'},
         {'type': 'init'},
         _USER_STATUS_FRAME,
+        _USER_STATUS_FRAME,
     ]
     fake = FakeWebSocketSession(frames)
     _install_fake_ws(monkeypatch, fake)
@@ -342,6 +353,7 @@ async def test_subscribe_websocket_init_resets_auth_attempt_budget(
         limit=1,
     )
 
+    assert isinstance(events[0], UserStatusEvent)
     assert isinstance(events[0], UserStatusEvent)
 
 
