@@ -148,7 +148,7 @@ async def subscribe_websocket(
     ucr_id: int | None = None,
     ws_url: str = 'wss://ws.divera247.com/ws',
     max_auth_attempts: int = 3,
-) -> AsyncIterator[models.UserStatusEvent | models.UnknownEvent]:
+) -> AsyncIterator[models.UserStatusEvent | models.ClusterPullEvent | models.UnknownEvent]:
     """Yield typed Divera 24/7 WebSocket events from a single session.
 
     Exits when the underlying socket disconnects (by raising
@@ -169,7 +169,7 @@ async def stream_websocket(  # noqa: PLR0913
     max_backoff: float = 60.0,
     backoff_factor: float = 2.0,
     backoff_jitter: float = 0.2,
-) -> AsyncIterator[models.UserStatusEvent | models.UnknownEvent]:
+) -> AsyncIterator[models.UserStatusEvent | models.ClusterPullEvent | models.UnknownEvent]:
     """Yield events forever, transparently reconnecting on any disconnect.
 
     Reconnect delay follows jittered exponential backoff bounded by

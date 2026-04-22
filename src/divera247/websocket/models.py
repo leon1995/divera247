@@ -5,6 +5,7 @@ from collections.abc import Mapping
 from typing import Annotated, Any, Literal
 
 from pydantic import (
+    AliasPath,
     BaseModel,
     ConfigDict,
     Discriminator,
@@ -19,18 +20,92 @@ from divera247.models.pull import PullStatusData
 logger = logging.getLogger(__name__)
 
 
+class ClusterPullRef(BaseModel):
+    """Reference to the cluster resource that triggered a ``cluster-pull`` event.
+
+    The ``type`` names the resource family (observed: ``alarm``; likely
+    also ``message``, ``event``, ``news``, ``vehicle``, etc., i.e. the
+    same families exposed by ``GET /api/v2/pull/all``) and ``id`` is the
+    primary key within that family. Callers should re-fetch the matching
+    pull endpoint to get the full object.
+    """
+
+    model_config = ConfigDict(extra='allow')
+
+    type: str = Field(description='Ressource-Typ, der neu gepullt werden soll (z. B. ``alarm``)')
+    id: int = Field(description='ID der betroffenen Ressource innerhalb ihres Typs')
+
+
+class ClusterPullEvent(BaseModel):
+    """``cluster-pull`` WebSocket event: a cluster-scoped resource changed.
+
+    The server tells us *that* something in a given cluster changed and
+    *which* resource to refresh (type + id). The actual object is not
+    inlined; the client is expected to re-fetch the relevant pull
+    endpoint to materialise the update.
+
+    Wire format, mirroring :class:`UserStatusEvent`:
+
+    .. code-block:: json
+
+        {
+          "type": "cluster-pull",
+          "payload": {
+            "type": "cluster-pull",
+            "pull": {"type": "alarm", "id": 123456},
+            "cluster": 1234
+          }
+        }
+
+    Flattened via :class:`~pydantic.AliasPath` so callers access
+    ``event.pull`` / ``event.cluster`` directly.
+    """
+
+    type: Literal['cluster-pull'] = Field(description='Event-Typ')
+    pull: ClusterPullRef = Field(
+        validation_alias=AliasPath('payload', 'pull'),
+        description='Referenz auf die geänderte Ressource (aus payload.pull)',
+    )
+    cluster: int = Field(
+        validation_alias=AliasPath('payload', 'cluster'),
+        description='ID des betroffenen Clusters (aus payload.cluster)',
+    )
+
+
 class UserStatusEvent(BaseModel):
     """``user-status`` WebSocket event: own status changed for a given UCR.
 
-    The ``payload`` has the exact same shape as the ``status`` block of
-    ``GET /api/v2/pull/all`` (see :class:`PullStatusData`); the envelope
-    adds the event ``type`` discriminator and the ``ucr`` of the affected
-    UserClusterRelation.
+    The server wire-format wraps the actual status (same fields as the
+    ``status`` block of ``GET /api/v2/pull/all`` -- see
+    :class:`PullStatusData`) and the affected ``ucr`` inside a nested
+    ``payload`` object, with the event type repeated redundantly at both
+    levels:
+
+    .. code-block:: json
+
+        {
+          "type": "user-status",
+          "payload": {
+            "type": "user-status",
+            "status": { ...PullStatusData... },
+            "ucr": 527459
+          }
+        }
+
+    We flatten this on validation via :class:`~pydantic.AliasPath`, so
+    callers only deal with ``event.status`` / ``event.ucr`` and never have
+    to reach through a redundant payload wrapper.
     """
 
     type: Literal['user-status'] = Field(description='Event-Typ')
-    payload: PullStatusData = Field(description='Aktueller Status der UCR')
-    ucr: int = Field(description='ID der betroffenen UserClusterRelation')
+    status: PullStatusData = Field(
+        validation_alias=AliasPath('payload', 'status'),
+        description='Aktueller Status der UCR (aus payload.status)',
+    )
+    ucr: int = Field(
+        validation_alias=AliasPath('payload', 'ucr'),
+        description='ID der betroffenen UserClusterRelation (aus payload.ucr)',
+    )
 
 
 class UnknownEvent(BaseModel):
@@ -39,9 +114,9 @@ class UnknownEvent(BaseModel):
     Keeps the raw ``type`` string so callers can still dispatch on it, and
     preserves every other top-level field as extras (accessible via
     :attr:`model_extra` or direct attribute access). Used both for genuinely
-    unknown event types (e.g. ``cluster-pull``, ``cluster-vehicle``) and as
-    a defensive fallback when a known event's inner payload fails its
-    dedicated validation (see :func:`parse_event`).
+    unknown event types (e.g. ``cluster-vehicle``) and as a defensive
+    fallback when a known event's inner payload fails its dedicated
+    validation (see :func:`parse_event`).
     """
 
     model_config = ConfigDict(extra='allow')
@@ -49,7 +124,7 @@ class UnknownEvent(BaseModel):
     type: str = Field(description='Raw event type as sent by the server')
 
 
-_KNOWN_EVENT_TYPES: frozenset[str] = frozenset({'user-status'})
+_KNOWN_EVENT_TYPES: frozenset[str] = frozenset({'user-status', 'cluster-pull'})
 
 
 def _event_discriminator(value: Any) -> str:
@@ -66,7 +141,9 @@ def _event_discriminator(value: Any) -> str:
 
 
 DiveraEvent = Annotated[
-    Annotated[UserStatusEvent, Tag('user-status')] | Annotated[UnknownEvent, Tag('unknown')],
+    Annotated[UserStatusEvent, Tag('user-status')]
+    | Annotated[ClusterPullEvent, Tag('cluster-pull')]
+    | Annotated[UnknownEvent, Tag('unknown')],
     Discriminator(_event_discriminator),
 ]
 """Discriminated union of every typed WebSocket event plus the catch-all.
@@ -76,10 +153,10 @@ places that want to build their own :class:`pydantic.TypeAdapter`.
 """
 
 
-_event_adapter: TypeAdapter[UserStatusEvent | UnknownEvent] = TypeAdapter(DiveraEvent)
+_event_adapter: TypeAdapter[UserStatusEvent | ClusterPullEvent | UnknownEvent] = TypeAdapter(DiveraEvent)
 
 
-def parse_event(event: Mapping[str, Any]) -> UserStatusEvent | UnknownEvent:
+def parse_event(event: Mapping[str, Any]) -> UserStatusEvent | ClusterPullEvent | UnknownEvent:
     """Parse a raw WebSocket event into the matching typed model.
 
     Dispatches on ``type`` via :data:`DiveraEvent`; unknown or missing types
