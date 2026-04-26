@@ -5,7 +5,7 @@ These models map to the schemas defined in ``api_v2_statusgeber.yaml``.
 
 from __future__ import annotations
 
-import datetime
+import datetime  # noqa: TC003
 
 from pydantic import BaseModel, Field
 

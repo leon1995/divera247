@@ -6,7 +6,7 @@ These models map to the schemas defined in ``api_v2_alarm.yaml``:
 
 from __future__ import annotations
 
-import datetime
+import datetime  # noqa: TC003
 from collections.abc import Mapping, Sequence
 
 from pydantic import BaseModel, Field
