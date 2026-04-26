@@ -1,5 +1,6 @@
 """Pydantic models for Divera 24/7 WebSocket push events."""
 
+import datetime
 import logging
 from collections.abc import Mapping
 from typing import Annotated, Any, Literal
@@ -80,7 +81,7 @@ class ClusterVehicleState(BaseModel):
     id: int = Field(description='ID des betroffenen Fahrzeugs')
     fmsstatus_id: int = Field(description='Aktuelle FMS-Status-ID')
     fmsstatus_note: str = Field(description='Optionaler Freitext zum FMS-Status')
-    fmsstatus_ts: int = Field(description='Unix-Timestamp der letzten Statusaenderung')
+    fmsstatus_ts: datetime.datetime = Field(description='Zeitpunkt der letzten Statusaenderung')
 
 
 class ClusterVehicleEvent(BaseModel):

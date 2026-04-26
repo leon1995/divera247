@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import datetime
+
 import pytest
 
 from divera247.websocket.models import (
@@ -155,6 +157,8 @@ def test_cluster_vehicle_event_flattens_nested_payload() -> None:
     assert isinstance(event.vehicle, ClusterVehicleState)
     assert event.vehicle.id == SAMPLE_VEHICLE_ID
     assert event.vehicle.fmsstatus_id == SAMPLE_VEHICLE_FMS
+    assert isinstance(event.vehicle.fmsstatus_ts, datetime.datetime)
+    assert event.vehicle.fmsstatus_ts == datetime.datetime.fromtimestamp(1700000120, tz=datetime.UTC)
 
 
 def test_cluster_vehicle_state_preserves_unknown_fields() -> None:

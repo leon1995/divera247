@@ -31,7 +31,7 @@ class EventEndpoint:
         """Create a new event (POST /api/v2/events)."""
         response = await self.client.post(
             'v2/events',
-            data=payload.model_dump(by_alias=False, exclude_none=True),
+            data=payload.model_dump(mode='json', by_alias=False, exclude_none=True),
         )
         return EventSingleResponse.model_validate(response.json())
 
@@ -48,7 +48,7 @@ class EventEndpoint:
         """Update an event (PUT /api/v2/events/{id})."""
         response = await self.client.put(
             f'v2/events/{event_id}',
-            data=payload.model_dump(by_alias=False, exclude_none=True),
+            data=payload.model_dump(mode='json', by_alias=False, exclude_none=True),
         )
         return EventSingleResponse.model_validate(response.json())
 
@@ -92,7 +92,7 @@ class EventEndpoint:
         payload: EventConfirmPayload | None = None,
     ) -> SuccessResponse:
         """Create a response to an event (POST /api/v2/events/confirm/{id})."""
-        data = payload.model_dump(by_alias=False, exclude_none=True) if payload else None
+        data = payload.model_dump(mode='json', by_alias=False, exclude_none=True) if payload else None
         response = await self.client.post(
             f'v2/events/confirm/{event_id}',
             data=data,

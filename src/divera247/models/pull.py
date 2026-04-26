@@ -3,6 +3,7 @@
 These models map to the schemas defined in ``api_v2_pull.yaml``.
 """
 
+import datetime
 from collections.abc import Mapping, Sequence
 from typing import cast
 
@@ -87,7 +88,7 @@ class PullUser(BaseModel):
         default=None,
         description='Onboarding-Tour Status',
     )
-    ts: int | None = Field(
+    ts: datetime.datetime | None = Field(
         default=None,
         description='Letzte Änderung als UNIX-Timestamp',
     )
@@ -96,7 +97,7 @@ class PullUser(BaseModel):
 class StatusChangeEntry(BaseModel):
     """Single entry in status.status_changes or status.status_log."""
 
-    ts: int | None = Field(default=None, description='UNIX-Timestamp')
+    ts: datetime.datetime | None = Field(default=None, description='UNIX-Timestamp')
     status: int | None = Field(default=None, description='ID des Status')
     note: str | None = Field(default=None, description='Status-Notiz')
     vehicle: int | None = Field(default=None, description='ID des Fahrzeugs')
@@ -119,11 +120,11 @@ class PullStatusData(BaseModel):
         default=None,
         description='Alle Geofences im Zeitraum ignorieren',
     )
-    status_set_date: int | None = Field(
+    status_set_date: datetime.datetime | None = Field(
         default=None,
         description='UNIX-Timestamp der letzten Statusänderung',
     )
-    status_reset_date: int | str | None = Field(
+    status_reset_date: datetime.datetime | str | None = Field(
         default=None,
         description='Nächstes Zurücksetzen gemäß UNIX-Timestamp',
     )
@@ -141,7 +142,7 @@ class PullStatusData(BaseModel):
     )
     note: str | None = Field(default=None, description='Status-Notiz')
     vehicle: int | None = Field(default=None, description='ID des aktuellen Fahrzeugs')
-    ts: int | None = Field(
+    ts: datetime.datetime | None = Field(
         default=None,
         description='Letzte Änderung als UNIX-Timestamp',
     )
@@ -170,7 +171,7 @@ class PullItemsData(BaseModel):
         default_factory=tuple,
         description='Reihenfolge aufsteigend',
     )
-    ts: int | None = Field(
+    ts: datetime.datetime | None = Field(
         default=None,
         description='Letzte Änderung als UNIX-Timestamp',
     )
@@ -223,11 +224,11 @@ class StatusPlanEntry(BaseModel):
         description='ID der Kalender-Kategorie',
     )
     title: str | None = Field(default=None, description='Beschreibung')
-    begin_ts: int | None = Field(
+    begin_ts: datetime.datetime | None = Field(
         default=None,
         description='Beginn als UNIX-Timestamp',
     )
-    end_ts: int | None = Field(
+    end_ts: datetime.datetime | None = Field(
         default=None,
         description='Ende als UNIX-Timestamp',
     )
@@ -256,7 +257,7 @@ class StatusPlanEntry(BaseModel):
         default=None,
         description='Laufzeit begrenzen',
     )
-    repeat_until_ts: int | None = Field(
+    repeat_until_ts: datetime.datetime | None = Field(
         default=None,
         description='Wiederholung bis als UNIX-Timestamp',
     )
@@ -301,7 +302,7 @@ class PullStatusplanData(BaseModel):
         default=None,
         description='Statusplan-Kategorien (deprecated)',
     )
-    ts: int | None = Field(
+    ts: datetime.datetime | None = Field(
         default=None,
         description='Letzte Änderung als UNIX-Timestamp',
     )
@@ -356,7 +357,7 @@ class PullLocalmonitorData(BaseModel):
         default_factory=tuple,
         description='Reihenfolge',
     )
-    ts: int | None = Field(
+    ts: datetime.datetime | None = Field(
         default=None,
         description='Letzte Änderung als UNIX-Timestamp',
     )
@@ -365,7 +366,7 @@ class PullLocalmonitorData(BaseModel):
 class PullMonitorData(BaseModel):
     """Personnel availability (monitor) in pull data."""
 
-    ts: int | None = Field(
+    ts: datetime.datetime | None = Field(
         default=None,
         description='Letzte Änderung als UNIX-Timestamp',
     )
@@ -546,7 +547,7 @@ class PullMessageChannelData(BaseModel):
         default_factory=tuple,
         description='Reihenfolge',
     )
-    ts: int | None = Field(
+    ts: datetime.datetime | None = Field(
         default=None,
         description='Letzte Änderung als UNIX-Timestamp',
     )
@@ -575,7 +576,7 @@ class PullMessageData(BaseModel):
         default=None,
         description='Limit',
     )
-    ts: int | None = Field(
+    ts: datetime.datetime | None = Field(
         default=None,
         description='Letzte Änderung als UNIX-Timestamp',
     )
@@ -596,7 +597,7 @@ class PullData(BaseModel):
         default=None,
         description='ID der UserClusterRelation im aktuellen Request',
     )
-    ts: int | None = Field(
+    ts: datetime.datetime | None = Field(
         default=None,
         description='Aktueller UNIX-Timestamp des Servers',
     )
@@ -670,7 +671,7 @@ class VehicleStatusItem(BaseModel):
         default=None,
         description='Notiz/Freitext-Rückmeldung',
     )
-    fmsstatus_ts: int | None = Field(default=None, description='UNIX-Timestamp')
+    fmsstatus_ts: datetime.datetime | None = Field(default=None, description='UNIX-Timestamp')
     lat: float | None = Field(default=None, description='Breitengrad')
     lng: float | None = Field(default=None, description='Längengrad')
 

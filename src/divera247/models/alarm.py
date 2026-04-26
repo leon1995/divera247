@@ -6,6 +6,7 @@ These models map to the schemas defined in ``api_v2_alarm.yaml``:
 
 from __future__ import annotations
 
+import datetime
 from collections.abc import Mapping, Sequence
 
 from pydantic import BaseModel, Field
@@ -32,7 +33,7 @@ class SuccessResponse(BaseModel):
 class UcrAnsweredEntry(BaseModel):
     """Single user response entry in ucr_answered (status_id -> ucr_id -> this)."""
 
-    ts: int = Field(description='UNIX timestamp of response')
+    ts: datetime.datetime = Field(description='UNIX timestamp of response')
     note: str = Field(default='', description='Freitext-Rückmeldung')
 
 
@@ -103,7 +104,7 @@ class ReachTransports(BaseModel):
     id: int = Field(description='ID of the transport')
     notification_type: int = Field(description='Notification type')
     count_send: int = Field(description='Count of send')
-    ts: int = Field(description='UNIX timestamp of the transport')
+    ts: datetime.datetime = Field(description='UNIX timestamp of the transport')
 
 
 class ReachReceived(BaseModel):
@@ -120,14 +121,14 @@ class ReachViewed(BaseModel):
     """Reach viewed for GET /api/v2/alarms/reach/{id}."""
 
     id: int = Field(description='ID of the viewed')
-    ts: int = Field(description='UNIX timestamp of the viewed')
+    ts: datetime.datetime = Field(description='UNIX timestamp of the viewed')
 
 
 class ReachConfirmed(BaseModel):
     """Reach confirmed for GET /api/v2/alarms/reach/{id}."""
 
     id: int = Field(description='ID of the confirmed')
-    ts: int = Field(description='UNIX timestamp of the confirmed')
+    ts: datetime.datetime = Field(description='UNIX timestamp of the confirmed')
     note: str = Field(description='Note of the confirmed')
 
 
@@ -195,7 +196,7 @@ class AlarmResult(BaseModel):
         default=None,
         description='ID der Alarmvorlage (Alarmcode)',
     )
-    date: int | None = Field(
+    date: datetime.datetime | None = Field(
         default=None,
         description='Alarmierungszeit als UNIX-Timestamp',
     )
@@ -319,23 +320,23 @@ class AlarmResult(BaseModel):
         description='Anzahl der Empfänger',
     )
     count_read: int | None = Field(default=None, description='Anzahl gelesen')
-    ts_response: int | None = Field(
+    ts_response: datetime.datetime | None = Field(
         default=None,
         description='Berechneter UNIX-Timestamp für Rückmeldung bis',
     )
-    ts_publish: int | None = Field(
+    ts_publish: datetime.datetime | None = Field(
         default=None,
         description='UNIX-Timestamp für zeitgesteuerte Alarmierung',
     )
-    ts_close: int | None = Field(
+    ts_close: datetime.datetime | None = Field(
         default=None,
         description='UNIX-Timestamp Einsatzende',
     )
-    ts_create: int | None = Field(
+    ts_create: datetime.datetime | None = Field(
         default=None,
         description='UNIX-Timestamp des Erstelldatums',
     )
-    ts_update: int | None = Field(
+    ts_update: datetime.datetime | None = Field(
         default=None,
         description='UNIX-Timestamp zuletzt bearbeitet',
     )
@@ -539,7 +540,7 @@ class CloseAlarmData(BaseModel):
         description='Zustand geschlossen oder geöffnet',
     )
     report: str | None = Field(default=None, description='Einsatzbericht')
-    ts: int | None = Field(
+    ts: datetime.datetime | None = Field(
         default=None,
         description='Datum/Uhrzeit als Unix-Timestamp',
     )

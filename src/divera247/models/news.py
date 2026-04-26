@@ -3,6 +3,7 @@
 These models map to the schemas defined in ``api_v2_news.yaml``.
 """
 
+import datetime
 from collections.abc import Mapping, Sequence
 
 from pydantic import BaseModel, Field
@@ -16,7 +17,7 @@ class NewsResult(BaseModel):
     id: int | None = Field(default=None, description='ID/Primärschlüssel')
     foreign_id: str | None = Field(default=None, description='Fremdschlüssel')
     author_id: int | None = Field(default=None, description='ID des Nutzers')
-    date: int | None = Field(
+    date: datetime.datetime | None = Field(
         default=None,
         description='Mitteilungszeit als UNIX-Timestamp',
     )
@@ -39,8 +40,8 @@ class NewsResult(BaseModel):
     answerable: bool | None = Field(default=None, description='Beantwortbar')
     hidden: bool | None = Field(default=None, description='Entwurf')
     deleted: bool | None = Field(default=None, description='Im Archiv')
-    ts_create: int | None = Field(default=None, description='UNIX-Timestamp Erstelldatum')
-    ts_update: int | None = Field(
+    ts_create: datetime.datetime | None = Field(default=None, description='UNIX-Timestamp Erstelldatum')
+    ts_update: datetime.datetime | None = Field(
         default=None,
         description='UNIX-Timestamp zuletzt bearbeitet',
     )
