@@ -116,6 +116,26 @@ class ClusterVehicleEvent(BaseModel):
     )
 
 
+class ClusterMonitorEvent(BaseModel):
+    """``cluster-monitor`` WebSocket event with monitor counters per status.
+
+    ``monitor`` mirrors the structure from ``pull/all`` monitor data:
+    group/category -> status_id -> bucket map (e.g. ``all`` + ``qualification``).
+    """
+
+    model_config = ConfigDict(extra='allow')
+
+    type: Literal['cluster-monitor'] = Field(description='Event-Typ')
+    monitor: Mapping[str, Any] = Field(
+        validation_alias=AliasPath('payload', 'monitor'),
+        description='Monitor-Daten je Gruppe und Status (aus payload.monitor)',
+    )
+    cluster: int = Field(
+        validation_alias=AliasPath('payload', 'cluster'),
+        description='ID des betroffenen Clusters (aus payload.cluster)',
+    )
+
+
 class UserStatusEvent(BaseModel):
     """``user-status`` WebSocket event: own status changed for a given UCR.
 
@@ -167,7 +187,7 @@ class UnknownEvent(BaseModel):
     type: str = Field(description='Raw event type as sent by the server')
 
 
-_KNOWN_EVENT_TYPES: frozenset[str] = frozenset({'user-status', 'cluster-pull', 'cluster-vehicle'})
+_KNOWN_EVENT_TYPES: frozenset[str] = frozenset({'user-status', 'cluster-pull', 'cluster-vehicle', 'cluster-monitor'})
 
 
 def _event_discriminator(value: Any) -> str:
@@ -187,6 +207,7 @@ DiveraEvent = Annotated[
     Annotated[UserStatusEvent, Tag('user-status')]
     | Annotated[ClusterPullEvent, Tag('cluster-pull')]
     | Annotated[ClusterVehicleEvent, Tag('cluster-vehicle')]
+    | Annotated[ClusterMonitorEvent, Tag('cluster-monitor')]
     | Annotated[UnknownEvent, Tag('unknown')],
     Discriminator(_event_discriminator),
 ]
@@ -197,12 +218,14 @@ places that want to build their own :class:`pydantic.TypeAdapter`.
 """
 
 
-_event_adapter: TypeAdapter[UserStatusEvent | ClusterPullEvent | ClusterVehicleEvent | UnknownEvent] = TypeAdapter(
-    DiveraEvent
-)
+_event_adapter: TypeAdapter[
+    UserStatusEvent | ClusterPullEvent | ClusterVehicleEvent | ClusterMonitorEvent | UnknownEvent
+] = TypeAdapter(DiveraEvent)
 
 
-def parse_event(event: Mapping[str, Any]) -> UserStatusEvent | ClusterPullEvent | ClusterVehicleEvent | UnknownEvent:
+def parse_event(
+    event: Mapping[str, Any],
+) -> UserStatusEvent | ClusterPullEvent | ClusterVehicleEvent | ClusterMonitorEvent | UnknownEvent:
     """Parse a raw WebSocket event into the matching typed model.
 
     Dispatches on ``type`` via :data:`DiveraEvent`; unknown or missing types

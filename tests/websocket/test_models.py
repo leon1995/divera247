@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from divera247.websocket.models import (
+    ClusterMonitorEvent,
     ClusterPullEvent,
     ClusterPullRef,
     ClusterVehicleEvent,
@@ -68,6 +69,20 @@ _CLUSTER_VEHICLE_SAMPLE: dict = {
             'fmsstatus_id': SAMPLE_VEHICLE_FMS,
             'fmsstatus_note': '',
             'fmsstatus_ts': 1700000120,
+        },
+        'cluster': SAMPLE_CLUSTER,
+    },
+}
+
+_CLUSTER_MONITOR_SAMPLE: dict = {
+    'type': 'cluster-monitor',
+    'payload': {
+        'type': 'cluster-monitor',
+        'monitor': {
+            '1': {
+                '1001': {'all': 10, 'qualification': {'2': 4, '3': 2}},
+                '1002': {'all': 3, 'qualification': {'2': 1}},
+            }
         },
         'cluster': SAMPLE_CLUSTER,
     },
@@ -156,6 +171,15 @@ def test_cluster_vehicle_state_preserves_unknown_fields() -> None:
     assert state.model_extra == {'name': 'LF 20'}
 
 
+def test_cluster_monitor_event_flattens_nested_payload() -> None:
+    """ClusterMonitorEvent hoists ``monitor`` + ``cluster`` via AliasPath."""
+    event = ClusterMonitorEvent.model_validate(_CLUSTER_MONITOR_SAMPLE)
+    assert event.type == 'cluster-monitor'
+    assert event.cluster == SAMPLE_CLUSTER
+    assert '1' in event.monitor
+    assert event.monitor['1']['1001']['all'] == 10
+
+
 def test_unknown_event_keeps_arbitrary_type() -> None:
     """UnknownEvent stores the original ``type`` string instead of overwriting it."""
     event = UnknownEvent.model_validate({'type': 'cluster-vehicle'})
@@ -199,6 +223,14 @@ def test_parse_event_dispatches_cluster_vehicle() -> None:
     assert parsed.cluster == SAMPLE_CLUSTER
     assert parsed.vehicle.id == SAMPLE_VEHICLE_ID
     assert parsed.vehicle.fmsstatus_id == SAMPLE_VEHICLE_FMS
+
+
+def test_parse_event_dispatches_cluster_monitor() -> None:
+    """``parse_event`` routes ``cluster-monitor`` frames to ClusterMonitorEvent."""
+    parsed = parse_event(_CLUSTER_MONITOR_SAMPLE)
+    assert isinstance(parsed, ClusterMonitorEvent)
+    assert parsed.cluster == SAMPLE_CLUSTER
+    assert parsed.monitor['1']['1002']['all'] == 3
 
 
 @pytest.mark.parametrize(

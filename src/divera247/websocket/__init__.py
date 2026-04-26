@@ -14,6 +14,7 @@ Public API:
 * Pydantic event envelopes (:class:`UserStatusEvent`,
   :class:`ClusterPullEvent` with its :class:`ClusterPullRef`,
   :class:`ClusterVehicleEvent` with :class:`ClusterVehicleState`,
+  :class:`ClusterMonitorEvent`,
   :class:`UnknownEvent`) and the :data:`DiveraEvent` discriminated union
   plus :func:`parse_event` for dispatching raw frames onto typed models.
 
@@ -23,6 +24,7 @@ Typical usage:
 
     from divera247.websocket import (
         ClusterPullEvent,
+        ClusterMonitorEvent,
         ClusterVehicleEvent,
         UnknownEvent,
         UserStatusEvent,
@@ -37,11 +39,14 @@ Typical usage:
                 ...  # re-fetch pull.type / pull.id for this cluster
             case ClusterVehicleEvent(cluster=cluster, vehicle=vehicle):
                 ...  # vehicle.id / vehicle.fmsstatus_id changed
+            case ClusterMonitorEvent(cluster=cluster, monitor=monitor):
+                ...  # monitor counters changed
             case UnknownEvent(type=msg_type):
                 ...
 """
 
 from divera247.websocket.models import (
+    ClusterMonitorEvent,
     ClusterPullEvent,
     ClusterPullRef,
     ClusterVehicleEvent,
@@ -58,6 +63,7 @@ from divera247.websocket.session import (
 )
 
 __all__ = [
+    'ClusterMonitorEvent',
     'ClusterPullEvent',
     'ClusterPullRef',
     'ClusterVehicleEvent',
