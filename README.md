@@ -9,7 +9,7 @@ and [`pydantic`](https://docs.pydantic.dev/).
 ```bash
 pip install divera247
 # or, with uv:
-uv add 'divera247'
+uv add divera247
 ```
 
 ### Optional: WebSocket streaming
