@@ -63,6 +63,20 @@ async def test_get_events(event_endpoint: EventEndpoint, httpx_mock: pytest_http
     assert response.data is not None
 
 
+def test_event_result_parses_start_end_timestamps() -> None:
+    """EventResult should parse live API `start`/`end` fields as datetimes."""
+    payload = {
+        'id': 123,
+        'title': 'Übungsdienst',
+        'start': 1796063400,
+        'end': 1796072400,
+    }
+    parsed = EventSingleResponse.model_validate({'success': True, 'data': payload})
+    assert parsed.data is not None
+    assert parsed.data.start is not None
+    assert parsed.data.end is not None
+
+
 async def test_download_event(event_endpoint: EventEndpoint, httpx_mock: pytest_httpx.HTTPXMock) -> None:
     """Download event returns raw bytes from mock."""
     payload = b'%PDF-1.4\n%\xe2\xe3\xcf\xd3\n'
