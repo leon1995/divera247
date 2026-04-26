@@ -18,6 +18,8 @@ class EventResult(BaseModel):
     foreign_id: str | None = Field(default=None, description='Fremdschlüssel')
     author_id: int | None = Field(default=None, description='ID des Nutzers')
     date: datetime.datetime | None = Field(default=None, description='Terminszeit als UNIX-Timestamp')
+    start: datetime.datetime | None = Field(default=None, description='Beginn als UNIX-Timestamp')
+    end: datetime.datetime | None = Field(default=None, description='Ende als UNIX-Timestamp')
     title: str | None = Field(default=None, description='Titel')
     text: str | None = Field(default=None, description='Meldung')
     address: str | None = Field(default=None, description='Ort')
