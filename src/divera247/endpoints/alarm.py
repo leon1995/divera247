@@ -135,7 +135,7 @@ class AlarmEndpoint:
         payload: CloseAlarmPayload | None = None,
     ) -> SuccessResponse:
         """Close an alarm (POST /api/v2/alarms/close/{id})."""
-        data = payload.model_dump(by_alias=False, exclude_none=True) if payload else None
+        data = payload.model_dump(mode='json', by_alias=False, exclude_none=True) if payload else None
         response = await self.client.post(
             f'v2/alarms/close/{alarm_id}',
             data=data,

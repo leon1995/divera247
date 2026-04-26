@@ -14,5 +14,5 @@ class StatusgeberEndpoint:
         """Set status (POST /api/v2/statusgeber/set-status)."""
         await self.client.post(
             'v2/statusgeber/set-status',
-            data=payload.model_dump(by_alias=False, exclude_none=True),
+            data=payload.model_dump(mode='json', by_alias=False, exclude_none=True),
         )

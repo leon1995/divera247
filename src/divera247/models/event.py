@@ -3,6 +3,7 @@
 These models map to the schemas defined in ``api_v2_event.yaml``.
 """
 
+import datetime
 from collections.abc import Mapping, Sequence
 
 from pydantic import BaseModel, Field
@@ -16,7 +17,7 @@ class EventResult(BaseModel):
     id: int | None = Field(default=None, description='ID/Primärschlüssel')
     foreign_id: str | None = Field(default=None, description='Fremdschlüssel')
     author_id: int | None = Field(default=None, description='ID des Nutzers')
-    date: int | None = Field(default=None, description='Terminszeit als UNIX-Timestamp')
+    date: datetime.datetime | None = Field(default=None, description='Terminszeit als UNIX-Timestamp')
     title: str | None = Field(default=None, description='Titel')
     text: str | None = Field(default=None, description='Meldung')
     address: str | None = Field(default=None, description='Ort')
@@ -36,8 +37,8 @@ class EventResult(BaseModel):
     answerable: bool | None = Field(default=None, description='Beantwortbar')
     hidden: bool | None = Field(default=None, description='Entwurf')
     deleted: bool | None = Field(default=None, description='Im Archiv')
-    ts_create: int | None = Field(default=None, description='UNIX-Timestamp Erstelldatum')
-    ts_update: int | None = Field(
+    ts_create: datetime.datetime | None = Field(default=None, description='UNIX-Timestamp Erstelldatum')
+    ts_update: datetime.datetime | None = Field(
         default=None,
         description='UNIX-Timestamp zuletzt bearbeitet',
     )
@@ -117,11 +118,11 @@ class EventInputEvent(BaseModel):
     title: str = Field(description='Titel')
     text: str | None = Field(default=None, description='Meldung')
     address: str | None = Field(default=None, description='Ort')
-    ts_start: int | None = Field(
+    ts_start: datetime.datetime | None = Field(
         default=None,
         description='Beginn als UNIX-Timestamp',
     )
-    ts_end: int | None = Field(
+    ts_end: datetime.datetime | None = Field(
         default=None,
         description='Ende als UNIX-Timestamp',
     )
@@ -153,7 +154,7 @@ class EventInputEvent(BaseModel):
 class EventInputReminder(BaseModel):
     """Reminder for event (event-input.Reminder)."""
 
-    ts: int | None = Field(
+    ts: datetime.datetime | None = Field(
         default=None,
         description='Zeitpunkt als UNIX-Timestamp',
     )

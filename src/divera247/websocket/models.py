@@ -1,5 +1,6 @@
 """Pydantic models for Divera 24/7 WebSocket push events."""
 
+import datetime
 import logging
 from collections.abc import Mapping
 from typing import Annotated, Any, Literal
@@ -80,7 +81,7 @@ class ClusterVehicleState(BaseModel):
     id: int = Field(description='ID des betroffenen Fahrzeugs')
     fmsstatus_id: int = Field(description='Aktuelle FMS-Status-ID')
     fmsstatus_note: str = Field(description='Optionaler Freitext zum FMS-Status')
-    fmsstatus_ts: int = Field(description='Unix-Timestamp der letzten Statusaenderung')
+    fmsstatus_ts: datetime.datetime = Field(description='Zeitpunkt der letzten Statusaenderung')
 
 
 class ClusterVehicleEvent(BaseModel):
@@ -109,6 +110,26 @@ class ClusterVehicleEvent(BaseModel):
     vehicle: ClusterVehicleState = Field(
         validation_alias=AliasPath('payload', 'vehicle'),
         description='Aktueller Fahrzeugstatus (aus payload.vehicle)',
+    )
+    cluster: int = Field(
+        validation_alias=AliasPath('payload', 'cluster'),
+        description='ID des betroffenen Clusters (aus payload.cluster)',
+    )
+
+
+class ClusterMonitorEvent(BaseModel):
+    """``cluster-monitor`` WebSocket event with monitor counters per status.
+
+    ``monitor`` mirrors the structure from ``pull/all`` monitor data:
+    group/category -> status_id -> bucket map (e.g. ``all`` + ``qualification``).
+    """
+
+    model_config = ConfigDict(extra='allow')
+
+    type: Literal['cluster-monitor'] = Field(description='Event-Typ')
+    monitor: Mapping[str, Any] = Field(
+        validation_alias=AliasPath('payload', 'monitor'),
+        description='Monitor-Daten je Gruppe und Status (aus payload.monitor)',
     )
     cluster: int = Field(
         validation_alias=AliasPath('payload', 'cluster'),
@@ -167,7 +188,7 @@ class UnknownEvent(BaseModel):
     type: str = Field(description='Raw event type as sent by the server')
 
 
-_KNOWN_EVENT_TYPES: frozenset[str] = frozenset({'user-status', 'cluster-pull', 'cluster-vehicle'})
+_KNOWN_EVENT_TYPES: frozenset[str] = frozenset({'user-status', 'cluster-pull', 'cluster-vehicle', 'cluster-monitor'})
 
 
 def _event_discriminator(value: Any) -> str:
@@ -187,6 +208,7 @@ DiveraEvent = Annotated[
     Annotated[UserStatusEvent, Tag('user-status')]
     | Annotated[ClusterPullEvent, Tag('cluster-pull')]
     | Annotated[ClusterVehicleEvent, Tag('cluster-vehicle')]
+    | Annotated[ClusterMonitorEvent, Tag('cluster-monitor')]
     | Annotated[UnknownEvent, Tag('unknown')],
     Discriminator(_event_discriminator),
 ]
@@ -197,12 +219,14 @@ places that want to build their own :class:`pydantic.TypeAdapter`.
 """
 
 
-_event_adapter: TypeAdapter[UserStatusEvent | ClusterPullEvent | ClusterVehicleEvent | UnknownEvent] = TypeAdapter(
-    DiveraEvent
-)
+_event_adapter: TypeAdapter[
+    UserStatusEvent | ClusterPullEvent | ClusterVehicleEvent | ClusterMonitorEvent | UnknownEvent
+] = TypeAdapter(DiveraEvent)
 
 
-def parse_event(event: Mapping[str, Any]) -> UserStatusEvent | ClusterPullEvent | ClusterVehicleEvent | UnknownEvent:
+def parse_event(
+    event: Mapping[str, Any],
+) -> UserStatusEvent | ClusterPullEvent | ClusterVehicleEvent | ClusterMonitorEvent | UnknownEvent:
     """Parse a raw WebSocket event into the matching typed model.
 
     Dispatches on ``type`` via :data:`DiveraEvent`; unknown or missing types
