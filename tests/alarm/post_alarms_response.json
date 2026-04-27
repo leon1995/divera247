@@ -57,9 +57,6 @@
     "answerable": true,
     "hidden": true,
     "deleted": true,
-    "ucr_adressed": [
-      0
-    ],
     "ucr_answered": {},
     "ucr_self_addressed": true,
     "ucr_self_status_id": 0,
@@ -83,6 +80,9 @@
         "title": "Anruferweg",
         "value": "Call to 19222"
       }
+    ],
+    "ucr_addressed": [
+      0
     ]
   }
 }
