@@ -3,11 +3,73 @@
 These models map to the schemas defined in ``api_v2_message-channel.yaml``.
 """
 
+import datetime
 from collections.abc import Mapping, Sequence
 
 from pydantic import BaseModel, Field
 
 from divera247.models.alarm import JsonPayload
+
+
+class MessageChannelConfigDefault(BaseModel):
+    """Default channel access config."""
+
+    editable: bool | None = Field(default=None, description='Bearbeitbar')
+    notification: bool | None = Field(default=None, description='Benachrichtigung aktiv')
+    writable: bool | None = Field(default=None, description='Schreibbar')
+    attachable: bool | None = Field(default=None, description='Anhänge erlaubt')
+    access_earlier_messages: bool | None = Field(default=None, description='Zugriff auf ältere Nachrichten')
+    access_start: bool | int | None = Field(default=None, description='Zugriff ab')
+    access_expire: bool | int | None = Field(default=None, description='Zugriff bis')
+    ts_access_start: datetime.datetime | None = Field(
+        default=None,
+        description='Zugriff ab als Timestamp',
+    )
+    ts_access_expire: datetime.datetime | None = Field(
+        default=None,
+        description='Zugriff bis als Timestamp',
+    )
+
+
+class MessageChannelConfig(BaseModel):
+    """Message channel config container."""
+
+    default: MessageChannelConfigDefault | None = Field(default=None, description='Default-Konfiguration')
+
+
+class MessageChannelAccessEntry(BaseModel):
+    """Single ucr_access entry."""
+
+    user_cluster_relation_id: int | None = Field(default=None, description='UCR ID')
+    access: int | bool | None = Field(default=None, description='Zugriff')
+    access_start: bool | int | None = Field(default=None, description='Teilnahme ab')
+    access_expire: bool | int | None = Field(default=None, description='Teilnahme bis')
+    access_earlier_messages: int | bool | None = Field(default=None, description='Ältere Nachrichten')
+    attachable: bool | None = Field(default=None, description='Anhänge erlaubt')
+    confirmed: int | None = Field(default=None, description='Bestätigt')
+    editable: bool | None = Field(default=None, description='Bearbeitbar')
+    notification: bool | None = Field(default=None, description='Benachrichtigung')
+    silent: bool | None = Field(default=None, description='Stumm')
+    ts_access_expire: datetime.datetime | None = Field(default=None, description='Zugriff bis')
+    ts_access_start: datetime.datetime | None = Field(default=None, description='Zugriff ab')
+    writable: bool | None = Field(default=None, description='Schreibbar')
+    ts_create: datetime.datetime | None = Field(default=None, description='Erstellt')
+
+
+class MessageChannelSelfAccess(BaseModel):
+    """Self access information."""
+
+    editable: bool | None = Field(default=None, description='Bearbeitbar')
+    writable: bool | None = Field(default=None, description='Schreibbar')
+    attachable: bool | None = Field(default=None, description='Anhänge erlaubt')
+    notification: bool | None = Field(default=None, description='Benachrichtigung')
+    access: bool | None = Field(default=None, description='Zugriff')
+    access_start: bool | None = Field(default=None, description='Zugriff ab gesetzt')
+    access_expire: bool | None = Field(default=None, description='Zugriff bis gesetzt')
+    access_earlier_messages: bool | None = Field(default=None, description='Ältere Nachrichten')
+    ts_access_start: datetime.datetime | None = Field(default=None, description='Zugriff ab')
+    ts_access_expire: datetime.datetime | None = Field(default=None, description='Zugriff bis')
+    ts_create: datetime.datetime | None = Field(default=None, description='Erstellt')
 
 
 class MessageChannelResult(BaseModel):
@@ -35,11 +97,32 @@ class MessageChannelResult(BaseModel):
         default=None,
         description='Für alle Mitglieder zugänglich',
     )
-    ts_create: int | None = Field(default=None, description='UNIX-Timestamp Erstelldatum')
-    ts_update: int | None = Field(
+    entities: Mapping[str, Sequence[int]] | None = Field(
+        default=None,
+        description='Adressierung nach Typ',
+    )
+    config: MessageChannelConfig | None = Field(default=None, description='Kanal-Konfiguration')
+    ucr_access: Mapping[str, MessageChannelAccessEntry] | None = Field(
+        default=None,
+        description='Zugriffseinträge je UCR',
+    )
+    self_access: MessageChannelSelfAccess | None = Field(
+        default=None,
+        description='Eigener Zugriff',
+    )
+    private_mode: bool | None = Field(default=None, description='Sichtbarkeit privat')
+    editable: bool | None = Field(default=None, description='Bearbeitbar')
+    ts_publish: datetime.datetime | None = Field(default=None, description='Veröffentlichung')
+    archive: bool | None = Field(default=None, description='Archiviert')
+    ts_archive: datetime.datetime | None = Field(default=None, description='Archivierung')
+    delete: bool | None = Field(default=None, description='Zum Löschen markiert')
+    ts_delete: datetime.datetime | None = Field(default=None, description='Löschen am')
+    ts_create: datetime.datetime | None = Field(default=None, description='UNIX-Timestamp Erstelldatum')
+    ts_update: datetime.datetime | None = Field(
         default=None,
         description='UNIX-Timestamp zuletzt bearbeitet',
     )
+    ts_last_message: datetime.datetime | None = Field(default=None, description='Zeitpunkt letzte Nachricht')
 
 
 class MessageChannelsData(BaseModel):
@@ -96,16 +179,24 @@ class MessageChannelInputMessageChannel(BaseModel):
         default=None,
         description='IDs der Nutzer, Gruppen, Standorte',
     )
+    config: MessageChannelConfig | None = Field(
+        default=None,
+        description='Standard-Berechtigungen',
+    )
+    ucr_access: Mapping[str, MessageChannelAccessEntry] | None = Field(
+        default=None,
+        description='Berechtigungen je UserClusterRelation',
+    )
     private_mode: bool | None = Field(default=None, description='Sichtbarkeit privat')
-    ts_publish: int | None = Field(
+    ts_publish: datetime.datetime | None = Field(
         default=None,
         description='Zeitgesteuerte Veröffentlichung',
     )
-    ts_archive: int | None = Field(
+    ts_archive: datetime.datetime | None = Field(
         default=None,
         description='Zeitgesteuerte Archivierung',
     )
-    ts_delete: int | None = Field(
+    ts_delete: datetime.datetime | None = Field(
         default=None,
         description='Zeitgesteuertes Löschen',
     )
@@ -142,11 +233,11 @@ class MessageChannelNotificationSelfAccess(BaseModel):
         default=None,
         description='Stumm schalten ab sofort',
     )
-    ts_silent_expire: int | None = Field(
+    ts_silent_expire: datetime.datetime | None = Field(
         default=None,
         description='Stumm ab als Timestamp',
     )
-    ts_silent_start: int | None = Field(
+    ts_silent_start: datetime.datetime | None = Field(
         default=None,
         description='Stumm bis als Timestamp',
     )
@@ -179,7 +270,7 @@ class MessagesItemsData(BaseModel):
     message_count: int | None = Field(default=None, description='Anzahl Nachrichten')
     first_message_id: int | None = Field(default=None, description='ID erste Nachricht')
     last_message_id: int | None = Field(default=None, description='ID letzte Nachricht')
-    ts_last_message: int | None = Field(
+    ts_last_message: datetime.datetime | None = Field(
         default=None,
         description='UNIX-Timestamp letzte Nachricht',
     )
@@ -199,14 +290,15 @@ class MessagesResponse(BaseModel):
 class MessageSortingData(BaseModel):
     """Data for GET /api/v2/message-channels/message-sorting/{id}."""
 
-    sorting: Mapping[str, int] = Field(
+    ucr: int | None = Field(default=None, description='UCR ID im Response-Objekt')
+    sorting: Mapping[str, datetime.datetime] = Field(
         default_factory=dict,
         description='ID -> UNIX-Timestamp',
     )
     message_count: int | None = Field(default=None, description='Anzahl Nachrichten')
     first_message_id: int | None = Field(default=None, description='ID erste Nachricht')
     last_message_id: int | None = Field(default=None, description='ID letzte Nachricht')
-    ts_last_message: int | None = Field(
+    ts_last_message: datetime.datetime | None = Field(
         default=None,
         description='UNIX-Timestamp letzte Nachricht',
     )

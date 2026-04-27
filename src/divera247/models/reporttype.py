@@ -41,6 +41,8 @@ class ReporttypeResult(BaseModel):
     uploads: bool | None = Field(default=None, description='Dateianhänge möglich')
     anonym: bool | None = Field(default=None, description='Anonyme Datenerfassung')
     location: bool | None = Field(default=None, description='Adresse erfassen')
+    skip_empty: bool | None = Field(default=None, description='Leere Felder überspringen')
+    pdf_layout: str | None = Field(default=None, description='PDF-Layout')
     fields: Sequence[ReporttypeField] | None = Field(
         default=None,
         description='Eingabefelder',
