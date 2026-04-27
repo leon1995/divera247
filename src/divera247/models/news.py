@@ -47,7 +47,7 @@ class NewsResult(BaseModel):
         custom_answers: bool | None = Field(default=None, description='Freitext möglich')
         response_until: bool | None = Field(default=None, description='Rückmeldung zeitlich begrenzt')
         ts_response: datetime.datetime | None = Field(default=None, description='Rückmeldung bis')
-        answers: Sequence['NewsResult.NewsSurveyAnswer'] | None = Field(
+        answers: Mapping[str, 'NewsResult.NewsSurveyAnswer'] | None = Field(
             default=None,
             description='Antwortoptionen',
         )
