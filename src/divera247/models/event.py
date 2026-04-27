@@ -14,15 +14,32 @@ from divera247.models.alarm import JsonPayload
 class EventResult(BaseModel):
     """Event result schema (event-result)."""
 
+    class EventReminder(BaseModel):
+        """Reminder details in event result."""
+
+        notification_filter: int | None = Field(default=None, description='Benachrichtigungsfilter')
+        ts: datetime.datetime | None = Field(default=None, description='UNIX-Timestamp Erinnerung')
+        send_push: bool | None = Field(default=None, description='Push-Erinnerung aktiv')
+        send_mail: bool | None = Field(default=None, description='Mail-Erinnerung aktiv')
+        executed: bool | None = Field(default=None, description='Erinnerung bereits ausgeführt')
+
     id: int | None = Field(default=None, description='ID/Primärschlüssel')
     foreign_id: str | None = Field(default=None, description='Fremdschlüssel')
     author_id: int | None = Field(default=None, description='ID des Nutzers')
-    date: datetime.datetime | None = Field(default=None, description='Terminszeit als UNIX-Timestamp')
+    cluster_id: int | None = Field(default=None, description='ID der Einheit')
+    message_channel_id: int | None = Field(default=None, description='ID des Nachrichtenkanals')
+    date: datetime.datetime | None = Field(default=None, description='Datum als UNIX-Timestamp')
     start: datetime.datetime | None = Field(default=None, description='Beginn als UNIX-Timestamp')
     end: datetime.datetime | None = Field(default=None, description='Ende als UNIX-Timestamp')
     title: str | None = Field(default=None, description='Titel')
     text: str | None = Field(default=None, description='Meldung')
     address: str | None = Field(default=None, description='Ort')
+    lat: float | int | None = Field(default=None, description='Breitengrad')
+    lng: float | int | None = Field(default=None, description='Längengrad')
+    fullday: bool | None = Field(default=None, description='Ganztägiger Termin')
+    days: int | None = Field(default=None, description='Dauer in Tagen')
+    archive: bool | None = Field(default=None, description='Archiviert')
+    ts_archive: datetime.datetime | None = Field(default=None, description='Archiv-Zeitpunkt')
     cluster: Sequence[int] | None = Field(default=None, description='IDs der Standorte')
     group: Sequence[int] | None = Field(default=None, description='IDs der Gruppen')
     user_cluster_relation: Sequence[int] | None = Field(
@@ -37,8 +54,53 @@ class EventResult(BaseModel):
     new: bool | None = Field(default=None, description='Neu/Ungelesen')
     editable: bool | None = Field(default=None, description='Bearbeitbar')
     answerable: bool | None = Field(default=None, description='Beantwortbar')
+    custom_answers: bool | None = Field(default=None, description='Eigene Antwortoptionen aktiv')
+    participation: int | None = Field(
+        default=None,
+        description='Eigene Rückmeldung (1=Ja, 2=Unsicher, 3=Nein)',
+    )
+    note: str | None = Field(default=None, description='Eigene Freitext-Rückmeldung')
+    show_result_count: int | None = Field(default=None, description='Ergebnisanzeige Anzahl')
+    show_result_names: int | None = Field(default=None, description='Ergebnisanzeige Namen')
+    count_recipients: int | None = Field(default=None, description='Anzahl Empfänger')
+    count_read: int | None = Field(default=None, description='Anzahl Gelesen')
+    ucr_addressed: Sequence[int] | None = Field(default=None, description='Adressierte Benutzer')
+    ucr_self_addressed: bool | None = Field(default=None, description='Selbst adressiert')
+    ucr_read: Sequence[int] | None = Field(default=None, description='Lesende Benutzer')
     hidden: bool | None = Field(default=None, description='Entwurf')
     deleted: bool | None = Field(default=None, description='Im Archiv')
+    message_channel: bool | None = Field(default=None, description='Ist Nachrichtenkanal')
+    attachment_count: int | None = Field(default=None, description='Anzahl Anhänge')
+    response_type: int | None = Field(default=None, description='Rückmeldetyp')
+    response_until: bool | None = Field(default=None, description='Rückmeldung zeitlich begrenzt')
+    ts_response: datetime.datetime | None = Field(default=None, description='Rückmeldung bis')
+    send_reminder: bool | None = Field(default=None, description='Erinnerung senden')
+    access_names: bool | None = Field(default=None, description='Namen sichtbar')
+    access_count: bool | None = Field(default=None, description='Anzahl sichtbar')
+    participationlist: Mapping[str, Sequence[int]] | None = Field(
+        default=None,
+        description='Rückmeldungen nach Antwortoption',
+    )
+    participationcount: Mapping[str, int] | None = Field(
+        default=None,
+        description='Anzahl Rückmeldungen nach Antwortoption',
+    )
+    participationnotes: Sequence[JsonPayload] | None = Field(
+        default=None,
+        description='Freitext-Rückmeldungen',
+    )
+    multiple_answers: bool | None = Field(default=None, description='Mehrfachauswahl möglich')
+    send_push: bool | None = Field(default=None, description='Push senden')
+    send_sms: bool | None = Field(default=None, description='SMS senden')
+    send_call: bool | None = Field(default=None, description='Sprachanruf senden')
+    send_mail: bool | None = Field(default=None, description='E-Mail senden')
+    send_pager: bool | None = Field(default=None, description='Pager senden')
+    ucr_answered: Sequence[int] | Mapping[str, JsonPayload] | None = Field(
+        default=None,
+        description='Rückmeldende Benutzer',
+    )
+    reminder: EventReminder | None = Field(default=None, description='Erinnerung')
+    ts_publish: datetime.datetime | None = Field(default=None, description='Veröffentlichungszeitpunkt')
     ts_create: datetime.datetime | None = Field(default=None, description='UNIX-Timestamp Erstelldatum')
     ts_update: datetime.datetime | None = Field(
         default=None,

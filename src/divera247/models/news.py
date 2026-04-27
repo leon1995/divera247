@@ -14,6 +14,49 @@ from divera247.models.alarm import JsonPayload
 class NewsResult(BaseModel):
     """News result schema (news-result)."""
 
+    class NewsSurveyCustomAnswer(BaseModel):
+        """Custom free-text answer in a survey option."""
+
+        id: int | None = Field(default=None, description='ID')
+        ts: datetime.datetime | None = Field(default=None, description='UNIX-Timestamp')
+        note: str | None = Field(default=None, description='Notiz')
+
+    class NewsSurveyAnswer(BaseModel):
+        """One selectable answer option within a survey."""
+
+        id: int | None = Field(default=None, description='ID')
+        title: str | None = Field(default=None, description='Antwort')
+        note: str | None = Field(default=None, description='Notiz')
+        answeredcount: int | None = Field(default=None, description='Anzahl Antworten')
+        answeredlist: Sequence[int] | None = Field(default=None, description='Antwortende Benutzer')
+        custom_answers: Sequence['NewsResult.NewsSurveyCustomAnswer'] | None = Field(
+            default=None,
+            description='Freitext-Antworten',
+        )
+
+    class NewsSurvey(BaseModel):
+        """Survey definition attached to a news item."""
+
+        id: int | None = Field(default=None, description='ID')
+        title: str | None = Field(default=None, description='Frage')
+        show_result_count: int | None = Field(default=None, description='Ergebnisanzeige Anzahl')
+        show_result_names: int | None = Field(default=None, description='Ergebnisanzeige Namen')
+        access_count: bool | None = Field(default=None, description='Anzahl sichtbar')
+        access_names: bool | None = Field(default=None, description='Namen sichtbar')
+        multiple_answers: bool | None = Field(default=None, description='Mehrfachauswahl möglich')
+        custom_answers: bool | None = Field(default=None, description='Freitext möglich')
+        response_until: bool | None = Field(default=None, description='Rückmeldung zeitlich begrenzt')
+        ts_response: datetime.datetime | None = Field(default=None, description='Rückmeldung bis')
+        answers: Sequence['NewsResult.NewsSurveyAnswer'] | None = Field(
+            default=None,
+            description='Antwortoptionen',
+        )
+        answer_sorting: Sequence[str | int] | None = Field(
+            default=None,
+            alias='answerSorting',
+            description='Antwort-Reihenfolge',
+        )
+
     id: int | None = Field(default=None, description='ID/Primärschlüssel')
     foreign_id: str | None = Field(default=None, description='Fremdschlüssel')
     author_id: int | None = Field(default=None, description='ID des Nutzers')
@@ -35,11 +78,29 @@ class NewsResult(BaseModel):
         default=None,
         description='Empfänger-Auswahl (1-4)',
     )
+    send_push: bool | None = Field(default=None, description='Push senden')
+    send_sms: bool | None = Field(default=None, description='SMS senden')
+    send_call: bool | None = Field(default=None, description='Sprachanruf senden')
+    send_mail: bool | None = Field(default=None, description='E-Mail senden')
+    send_pager: bool | None = Field(default=None, description='Pager senden')
+    survey: bool | None = Field(default=None, description='Umfrage aktiv')
+    surveys: Sequence[NewsSurvey] | None = Field(default=None, description='Umfragen')
     new: bool | None = Field(default=None, description='Neu/Ungelesen')
     editable: bool | None = Field(default=None, description='Bearbeitbar')
     answerable: bool | None = Field(default=None, description='Beantwortbar')
     hidden: bool | None = Field(default=None, description='Entwurf')
     deleted: bool | None = Field(default=None, description='Im Archiv')
+    ucr_addressed: Sequence[int] | None = Field(default=None, description='Adressierte Benutzer')
+    ucr_answered: Sequence[int] | Mapping[str, JsonPayload] | None = Field(
+        default=None,
+        description='Rückmeldende Benutzer',
+    )
+    ucr_self_addressed: bool | None = Field(default=None, description='Selbst adressiert')
+    count_recipients: int | None = Field(default=None, description='Anzahl Empfänger')
+    count_read: int | None = Field(default=None, description='Anzahl Gelesen')
+    ts_publish: datetime.datetime | None = Field(default=None, description='Veröffentlichungszeitpunkt')
+    archive: bool | None = Field(default=None, description='Archiviert')
+    ts_archive: datetime.datetime | None = Field(default=None, description='Archivierungszeitpunkt')
     ts_create: datetime.datetime | None = Field(default=None, description='UNIX-Timestamp Erstelldatum')
     ts_update: datetime.datetime | None = Field(
         default=None,

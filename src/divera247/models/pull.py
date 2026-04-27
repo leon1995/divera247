@@ -366,12 +366,60 @@ class PullLocalmonitorData(BaseModel):
 class PullMonitorData(BaseModel):
     """Personnel availability (monitor) in pull data."""
 
+    class AnonymousStatusEntry(BaseModel):
+        """Aggregated anonymous availability for one status."""
+
+        all: int | None = Field(default=None, description='Anzahl Nutzer im Status')
+        qualification: Mapping[str, int] = Field(
+            default_factory=dict,
+            description='Anzahl nach Qualifikation (qualification_id -> count)',
+        )
+
+    class UserRef(BaseModel):
+        """Minimal user reference in monitor qualification lists."""
+
+        id: int | None = Field(default=None, description='ID des Benutzers')
+
+    class DetailedStatusEntry(BaseModel):
+        """Detailed availability for one status."""
+
+        all: Sequence[StatusChangeEntry] = Field(
+            default_factory=tuple,
+            description='Nutzer mit Statusdetails',
+        )
+        qualification: Mapping[str, Sequence['PullMonitorData.UserRef']] = Field(
+            default_factory=dict,
+            description='Nutzer nach Qualifikation (qualification_id -> user refs)',
+        )
+
+    anonymous_by_status: Mapping[str, AnonymousStatusEntry] = Field(
+        default_factory=dict,
+        alias='1',
+        description='Anonyme Aggregation nach Status',
+    )
+    detailed_by_status: Mapping[str, DetailedStatusEntry] = Field(
+        default_factory=dict,
+        alias='2',
+        description='Detaillierte Nutzerlisten nach Status',
+    )
+    users: Mapping[str, StatusChangeEntry] = Field(
+        default_factory=dict,
+        alias='3',
+        description='Aktueller Status je Nutzer (user_id -> entry)',
+    )
     ts: datetime.datetime | None = Field(
         default=None,
         description='Letzte Änderung als UNIX-Timestamp',
     )
     cached: bool | None = Field(default=None, description='Aus Cache')
-    # Keys "1", "2", "3" etc. are group/category IDs, values are status_id -> count mappings
+
+    @field_validator('anonymous_by_status', 'detailed_by_status', 'users', mode='before')
+    @classmethod
+    def _coerce_monitor_mappings(cls, v: object) -> Mapping[str, object]:
+        """Coerce legacy scalar fixtures into empty mapping."""
+        if isinstance(v, dict):
+            return cast('Mapping[str, object]', v)
+        return cast('Mapping[str, object]', {})
 
 
 class PullConsumerData(BaseModel):
