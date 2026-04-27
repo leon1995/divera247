@@ -47,9 +47,6 @@
         "access_names": true,
         "participation": true,
         "note": "bin dabei!",
-        "ucr_adressed": [
-            0
-        ],
         "ucr_answered": [
             0
         ],
@@ -57,6 +54,9 @@
         "count_recipients": 0,
         "count_read": 0,
         "ts_create": 0,
-        "ts_update": 0
+        "ts_update": 0,
+        "ucr_addressed": [
+            0
+        ]
     }
 }

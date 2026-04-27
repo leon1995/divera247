@@ -295,7 +295,7 @@ class AlarmResult(BaseModel):
         default=None,
         description='Im Archiv, nur noch für Schreibberechtigte zugänglich',
     )
-    ucr_adressed: Sequence[int] | None = Field(
+    ucr_addressed: Sequence[int] | None = Field(
         default=None,
         description='Adressierte Benutzer',
     )
@@ -357,10 +357,6 @@ class AlarmResult(BaseModel):
     duration: str | None = Field(
         default=None,
         description="Einsatzdauer (z.B. '35 Minuten')",
-    )
-    ucr_addressed: Sequence[int] | None = Field(
-        default=None,
-        description='Adressierte Benutzer (API spelling)',
     )
     ucr_answeredcount: Mapping[str, int] | None = Field(
         default=None,

@@ -66,9 +66,6 @@
         "answerable": true,
         "hidden": true,
         "deleted": true,
-        "ucr_adressed": [
-            0
-        ],
         "ucr_answered": [
             0
         ],
@@ -79,6 +76,9 @@
         "archive": true,
         "ts_archive": 0,
         "ts_create": 0,
-        "ts_update": 0
+        "ts_update": 0,
+        "ucr_addressed": [
+            0
+        ]
     }
 }
