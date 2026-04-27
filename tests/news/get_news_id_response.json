@@ -37,8 +37,8 @@
                 "custom_answers": true,
                 "response_until": true,
                 "ts_response": 0,
-                "answers": [
-                    {
+                "answers": {
+                    "0": {
                         "id": 0,
                         "title": "ja",
                         "note": "weiß noch nicht",
@@ -54,7 +54,7 @@
                             }
                         ]
                     }
-                ],
+                },
                 "answerSorting": [
                     "string",
                     0
