@@ -27,7 +27,10 @@ class NewsResult(BaseModel):
         id: int | None = Field(default=None, description='ID')
         title: str | None = Field(default=None, description='Antwort')
         note: str | None = Field(default=None, description='Notiz')
-        answeredcount: int | None = Field(default=None, description='Anzahl Antworten')
+        answeredcount: int | Sequence[object] | None = Field(
+            default=None,
+            description='Anzahl Antworten',
+        )
         answeredlist: Sequence[int] | None = Field(default=None, description='Antwortende Benutzer')
         custom_answers: Sequence['NewsResult.NewsSurveyCustomAnswer'] | None = Field(
             default=None,
