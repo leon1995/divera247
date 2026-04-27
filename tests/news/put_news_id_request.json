@@ -58,9 +58,7 @@
         "custom_answers": true,
         "response_until": true,
         "ts_response": 0,
-        "answers": [
-            "string"
-        ],
+        "answers": {},
         "sorting": [
             "string",
             0

@@ -27,7 +27,10 @@ class NewsResult(BaseModel):
         id: int | None = Field(default=None, description='ID')
         title: str | None = Field(default=None, description='Antwort')
         note: str | None = Field(default=None, description='Notiz')
-        answeredcount: int | None = Field(default=None, description='Anzahl Antworten')
+        answeredcount: int | Sequence[object] | None = Field(
+            default=None,
+            description='Anzahl Antworten',
+        )
         answeredlist: Sequence[int] | None = Field(default=None, description='Antwortende Benutzer')
         custom_answers: Sequence['NewsResult.NewsSurveyCustomAnswer'] | None = Field(
             default=None,
@@ -47,7 +50,7 @@ class NewsResult(BaseModel):
         custom_answers: bool | None = Field(default=None, description='Freitext möglich')
         response_until: bool | None = Field(default=None, description='Rückmeldung zeitlich begrenzt')
         ts_response: datetime.datetime | None = Field(default=None, description='Rückmeldung bis')
-        answers: Sequence['NewsResult.NewsSurveyAnswer'] | None = Field(
+        answers: Mapping[str, 'NewsResult.NewsSurveyAnswer'] | None = Field(
             default=None,
             description='Antwortoptionen',
         )
